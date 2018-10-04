@@ -1,3 +1,6 @@
 from django.contrib import admin
+from .models import *
 
-# Register your models here.
+admin.site.register(Memoria)
+admin.site.register(Simulacion)
+admin.site.register(Proceso)
