@@ -11,7 +11,122 @@
 
 {% block content %}
     <div class="row">
-        <div class="col">
-        </div>
+    	<form action="" class="col" method="post" name="simulacion">
+	    	<div class="row">
+		        <div class="col-8">
+        			<div class="card">
+						<div class="card-body">
+							<div class="dropdown float-right">
+								<button class="btn btn-secondary btn-sm dropdown-toggle" type="button" id="dropdownOpcionesProc" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Opciones</button>
+								<div class="dropdown-menu" aria-labelledby="dropdownOpcionesProc">
+									<a class="dropdown-item" href="#" data-toggle="modal" data-target="#nuevoProcesoModal">Nuevo proceso</a>
+									<a class="dropdown-item" href="#" data-toggle="modal" data-target="#eliminarProcesoModal">Eliminar procesos</a>
+									<div class="dropdown-divider"></div>
+									<a class="dropdown-item" href="{% url 'index' %}">Reset</a>
+								</div>
+							</div>
+							<h5 class="card-title">Procesos</h5>
+							<table class="table table-hover text-center">
+								<thead class="thead-dark">
+									<tr>
+										<th scope="col">PID</th>
+										<th scope="col">Descripción</th>
+										<th scope="col">Tiempo arribo</th>
+										<th scope="col">Ráfagas CPU - E/S</th>
+									</tr>
+								</thead>
+								<tbody>
+									<tr>
+										<th scope="row">1</th>
+										<td>daemon</td>
+										<td>0</td>
+										<td></td>
+									</tr>
+									<tr>
+										<th scope="row">2</th>
+										<td>kernel</td>
+										<td>0</td>
+										<td></td>
+									</tr>
+									<tr>
+										<th scope="row">3</th>
+										<td>services</td>
+										<td>3</td>
+										<td></td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
+					</div>
+		        </div>
+		        <div class="col-4">
+		        	<div class="row">
+		        		<div class="col">
+		        			<div class="card">
+								<div class="card-body text-center">
+									<h5 class="card-title">Algoritmo de Planificación</h5>
+									<div class="btn-group btn-group-toggle" data-toggle="buttons">
+										<label class="btn btn-primary active">
+											<input type="radio" name="algoritmo" id="btn-fcfs" autocomplete="off" value="fcfs" checked> FCFS
+										</label>
+										<label class="btn btn-primary">
+											<input type="radio" name="algoritmo" id="btn-sjf" autocomplete="off" value="sjf"> SJF
+										</label>
+										<label class="btn btn-primary">
+											<input type="radio" name="algoritmo" id="btn-rr" autocomplete="off" value="rr"> RR
+										</label>
+										<label class="btn btn-primary">
+											<input type="radio" name="algoritmo" id="btn-otro" autocomplete="off" value="other"> Otro
+										</label>
+									</div>
+								</div>
+							</div>
+		        		</div>
+		        		<div class="col mt-3">
+		        			<div class="card">
+								<div class="card-body">
+									<h5 class="card-title text-center">Memoria</h5>
+										<ul class="nav nav-pills nav-fill" id="nav-tab-memoria" role="tablist">
+											<li class="nav-item">
+												<a class="nav-item nav-link active" id="nav-particion-fija" data-toggle="tab" href="#tab-particion-fija" role="tab" aria-controls="nav-particion-fija" aria-selected="true">Partición Fija</a>
+											</li>
+											<li class="nav-item">
+												<a class="nav-item nav-link" id="nav-particion-variable" data-toggle="tab" href="#tab-particion-variable" role="tab" aria-controls="nav-particion-variable" aria-selected="false">Partición Variable</a>
+											</li>
+										</ul>
+									<div class="tab-content mt-2 ml-2" id="nav-memoria">
+										<div class="tab-pane fade show active" id="tab-particion-fija" role="tabpanel" aria-labelledby="nav-particion-fija">
+											<div class="form-check">
+												<input class="form-check-input" type="radio" name="memoria_tipo" id="pf-best-fit" value="pf-best-fit" checked>
+												<label class="form-check-label ml-2 align-middle" for="pf-best-fit">Best Fit</label>
+											</div>
+											<div class="form-check">
+												<input class="form-check-input" type="radio" name="memoria_tipo" id="pf-first-fit" value="pf-first-fit">
+												<label class="form-check-label ml-2 align-middle" for="pf-first-fit">First Fit</label>
+											</div>
+										</div>
+										<div class="tab-pane fade" id="tab-particion-variable" role="tabpanel" aria-labelledby="nav-particion-variable">
+											<div class="form-check">
+												<input class="form-check-input" type="radio" name="memoria_tipo" id="pv-worst-fit" value="pv-worst-fit">
+												<label class="form-check-label ml-2 align-middle" for="pv-worst-fit">Worst Fit</label>
+											</div>
+											<div class="form-check">
+												<input class="form-check-input" type="radio" name="memoria_tipo" id="pv-first-fit" value="pv-first-fit">
+												<label class="form-check-label ml-2 align-middle" for="pv-first-fit">First Fit</label>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+		        		</div>
+		        	</div>
+		        </div>
+		    </div>
+        </form>
     </div>
 {% endblock %}
+
+{% block modals %}
+	{% include 'app/modal_nuevo_proceso.html' %}
+	{% include 'app/modal_eliminar_proceso.html' %}
+{% endblock modals %}

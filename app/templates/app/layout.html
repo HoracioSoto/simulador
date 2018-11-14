@@ -35,15 +35,15 @@
             {% endif %}
         </nav>
         <div class="container">
-            {% if user.is_authenticated %}
-                <nav aria-label="breadcrumb" class="mt-3">
-                    <ol class="breadcrumb">
-                        {% block breadcrumb %}{% endblock breadcrumb %}
-                    </ol>
-                </nav>
-            {% endif %}
+            <nav aria-label="breadcrumb" class="mt-3">
+                <ol class="breadcrumb">
+                    {% block breadcrumb %}{% endblock breadcrumb %}
+                </ol>
+            </nav>
             {% block content %}{% endblock content %}
         </div>
+        
+        {% block modals %}{% endblock modals %}
 
         <script src="{% static 'app/js/jquery-3.3.1.min.js' %}"></script>
         <script src="{% static 'app/js/popper.min.js' %}"></script>
