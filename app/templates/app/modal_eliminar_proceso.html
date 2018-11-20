@@ -1,6 +1,6 @@
 <!-- Modal eliminar proceso -->
 <div class="modal fade" id="eliminarProcesoModal" tabindex="-1" role="dialog" aria-labelledby="eliminarProcesoLabel" aria-hidden="true">
-	<div class="modal-dialog modal-lg" role="document">
+	<div class="modal-dialog" role="document">
 		<div class="modal-content">
 			<div class="modal-header">
 				<h5 class="modal-title" id="eliminarProcesoLabel">Eliminar procesos</h5>
@@ -9,11 +9,36 @@
 				</button>
 			</div>
 			<div class="modal-body">
-			...
+			<table class="table table-bordered table-condensed text-center">
+				<thead>
+					<tr>
+						<th scope="col">PID</th>
+						<th scope="col">Descripción</th>
+						<th scope="col"></th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr>
+						<th scope="row">1</th>
+						<td>daemon</td>
+						<td><input type="checkbox"></td>
+					</tr>
+					<tr>
+						<th scope="row">2</th>
+						<td>kernel</td>
+						<td><input type="checkbox"></td>
+					</tr>
+					<tr>
+						<th scope="row">3</th>
+						<td>services</td>
+						<td><input type="checkbox"></td>
+					</tr>
+				</tbody>
+			</table>
 			</div>
 			<div class="modal-footer">
 				<button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
-				<button type="button" class="btn btn-primary">Guardar</button>
+				<button type="button" class="btn btn-danger">Eliminar</button>
 			</div>
 		</div>
 	</div>
