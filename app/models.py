@@ -23,8 +23,8 @@ class Memoria(models.Model):
 class Simulacion(models.Model):
     id = models.AutoField(primary_key=True)
     algoritmo_planificacion = models.CharField(max_length=30)
-    memoria = models.OneToOneField(Memoria,
-                                   on_delete=models.CASCADE)
+    # memoria = models.OneToOneField(Memoria,
+    #                                on_delete=models.CASCADE)
     fecha_creacion = models.DateTimeField(auto_now_add=True)
     usuario = models.ForeignKey(User, on_delete=models.CASCADE)
 
@@ -37,14 +37,15 @@ class Simulacion(models.Model):
 
 
 class Proceso(models.Model):
-    id = models.AutoField(primary_key=True, verbose_name='PID')
+    id = models.AutoField(primary_key=True)
+    descripcion = models.CharField(null=True, blank=True, max_length=255)
     tiempo_arribo = models.IntegerField(verbose_name='Tiempo de arribo')
-    tiempo_recursos = models.TextField(null=True, blank=True,
-                                       verbose_name='Tiempo de recursos')
+    tiempo_recursos = models.TextField(verbose_name='Tiempo de recursos')
     simulacion = models.ForeignKey(Simulacion,
                                    related_name='Procesos',
                                    verbose_name='Simulación',
                                    on_delete=models.CASCADE)
+    simulacion_pid = models.IntegerField(verbose_name='PID')
 
     class Meta:
         verbose_name = 'Proceso'
@@ -52,3 +53,6 @@ class Proceso(models.Model):
 
     def __str__(self):
         return str(self.id)
+
+    def get_recursos(self):
+        return self.tiempo_recursos.split(',')

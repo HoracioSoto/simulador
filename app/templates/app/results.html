@@ -1,0 +1,123 @@
+{% extends "app/layout.html" %}
+{% load staticfiles %}
+
+{% block title %}Resultados{% endblock title %}
+
+{% block extra_head %}
+    <link rel="stylesheet" href="{% static 'app/css/app.css' %}">
+{% endblock extra_head %}
+
+{% block breadcrumb %}
+    <li class="breadcrumb-item">
+        <a href="{% url 'index' %}">Inicio</a>
+    </li>
+    <li class="breadcrumb-item">Resultados</li>
+{% endblock breadcrumb %}
+
+{% block content %}
+    <div class="row">
+        <div class="col-sm-12">
+            <div class="card">
+                <div class="card-header">
+                    Tabla de procesos
+                </div>
+                <div class="card-body">
+                    <h6 class="card-title">Simulación N°{{ simulacion.id }}</h6>
+                    <table class="table table-hover table-dark table-striped table-sm text-center" id="tabla-resultados">
+                        <thead class="thead-dark">
+                            <tr>
+                                <th scope="col">PID</th>
+                                <th scope="col">Descripción</th>
+                                <th scope="col">Tiempo arribo</th>
+                                {% for r in data.recursos %}
+                                    <th scope="col">
+                                        {% if forloop.counter|divisibleby:2 %}E/S{% else %}CPU{% endif %}
+                                    </th>
+                                {% endfor %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for proceso in procesos  %}
+                                <tr class="sin-procesos">
+                                    <th scope="row">{{ proceso.simulacion_pid }}</th>
+                                    <td>{{ proceso.descripcion }}</td>
+                                    <td>{{ proceso.tiempo_arribo }}</td>
+                                    {% for rec in proceso.get_recursos %}
+                                        <td>{{ rec }}</td>
+                                    {% endfor %}
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-12 mt-3">
+            <div class="card">
+                <div class="card-header">
+                    CPU
+                </div>
+                <div class="card-body">
+                    <h6 class="card-title">Algoritmo de planificación: {{ simulacion.algoritmo_planificacion }}</h6>
+                    <div class="progress" id="progress-cpu">
+                        {% for proc in data.CPU.procesos  %}
+                            <div class="progress-bar progress-bar-striped progress-bar-animated progress-process {{ proc.class }}" role="progressbar" style="width:{{ proc.percent }}%;" aria-valuenow="15" aria-valuemin="0" aria-valuemax="100" {% if proc.pid %}data-container="body" title="{{ proc.label }}" data-toggle="popover" data-placement="top" data-content="Tiempo: {{ proc.time }}" data-trigger="hover"{% endif %}>
+                                {% if proc.pid %}<b class="text-dark">PID {{ proc.pid }}</b>{% endif %}
+                            </div>
+                        {% endfor %}
+                    </div>
+                    <div class="progress" id="progress-cpu-time">
+                        {% for proc in data.CPU.procesos  %}
+                            <div class="progress-bar bg-white" role="progressbar" style="width:{{ proc.percent }}%;" aria-valuenow="15" aria-valuemin="0" aria-valuemax="100">
+                                <b class="text-dark">
+                                    <span class="float-left">{{ proc.start }}</span>
+                                    {% if forloop.last %}
+                                        <span class="float-right">{{ proc.end }}</span>
+                                    {% endif %}
+                                </b>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-12 mt-3">
+            <div class="card">
+                <div class="card-header">
+                    E/S
+                </div>
+                <div class="card-body">
+                    <h6 class="card-title">Algoritmo de planificación: FCFS</h6>
+                    <div class="progress" id="progress-es">
+                        {% for proc in data.ES.procesos  %}
+                            <div class="progress-bar {{ proc.class }}" role="progressbar" style="width:{{ proc.percent }}%;" aria-valuenow="15" aria-valuemin="0" aria-valuemax="100" {% if proc.pid %}data-container="body" title="{{ proc.label }}" data-toggle="popover" data-placement="top" data-content="Tiempo: {{ proc.time }}" data-trigger="hover"{% endif %}>
+                                {% if proc.pid %}<b>PID {{ proc.pid }}</b>{% endif %}
+                            </div>
+                        {% endfor %}
+                    </div>
+                    <div class="progress" id="progress-es-time">
+                        {% for proc in data.ES.procesos  %}
+                            <div class="progress-bar bg-white" role="progressbar" style="width:{{ proc.percent }}%;" aria-valuenow="15" aria-valuemin="0" aria-valuemax="100">
+                                <b class="text-dark">
+                                    <span class="float-left">{{ proc.start }}</span>
+                                    {% if forloop.last %}
+                                        <span class="float-right">{{ proc.end }}</span>
+                                    {% endif %}
+                                </b>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_scripts %}
+    <script src="{% static 'app/js/resultados.js' %}"></script>
+    <script type="text/javascript">
+        $(document).ready(function() {
+            results.init();
+        });
+    </script>
+{% endblock extra_scripts %}

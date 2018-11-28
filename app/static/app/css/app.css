@@ -1,0 +1,21 @@
+#progress-cpu,
+#progress-es {
+	height: 60px;
+}
+#progress-cpu-time,
+#progress-es-time {
+	height: 30px;
+}
+.progress-bar:hover {
+	cursor: pointer !important;
+}
+.bg-none {
+	background: none !important;
+}
+.bg-white {
+	background: #fff !important;
+	border-right: 1px dotted black;
+}
+.bg-white:last-child {
+	border: none !important;
+}

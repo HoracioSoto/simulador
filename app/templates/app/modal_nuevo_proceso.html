@@ -1,33 +1,43 @@
 <!-- Modal nuevo proceso -->
 <div class="modal fade" id="nuevoProcesoModal" tabindex="-1" role="dialog" aria-labelledby="nuevoProcesoLabel" aria-hidden="true">
-	<div class="modal-dialog" role="document">
-		<div class="modal-content">
-			<div class="modal-header">
-				<h5 class="modal-title" id="nuevoProcesoLabel">Nuevo proceso</h5>
-				<button type="button" class="close" data-dismiss="modal" aria-label="Close">
-					<span aria-hidden="true">&times;</span>
-				</button>
-			</div>
-			<div class="modal-body">
-				<form>
-					<div class="form-group">
-						<label for="np-descripcion" class="col-form-label">Descripción:</label>
-						<input type="text" class="form-control" id="np-descripcion">
-					</div>
-					<div class="form-group">
-						<label for="np-ta" class="col-form-label">Tiempo de arribo:</label>
-						<input type="number" class="form-control" id="np-ta" value="0">
-					</div>
-					<div class="form-group">
-						<label for="np-rafagas" class="col-form-label">Ráfagas CPU - E/S:</label>
-						<input type="text" class="form-control" id="np-rafagas" placeholder="Separadas por coma">
-					</div>
-				</form>
-			</div>
-			<div class="modal-footer">
-				<button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
-				<button type="button" class="btn btn-primary">Guardar</button>
-			</div>
-		</div>
-	</div>
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="nuevoProcesoLabel">Nuevo proceso</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-danger" role="alert" id="error-rafagas" style="display:none;">
+                    <p class="mb-0 error-mensaje"></p>
+                </div>
+                <form name="nuevo_proceso" id="nuevo_proceso">
+                    <div class="form-group">
+                        <label for="np-descripcion" class="col-form-label">Descripción</label>
+                        <input type="text" class="form-control" id="np-descripcion" name="descripcion" maxlength="255">
+                    </div>
+                    <div class="form-group">
+                        <label for="np-ta" class="col-form-label">Tiempo de arribo *</label>
+                        <input type="number" class="form-control" id="np-ta" name="ta" value="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="np-rafagas" class="col-form-label">Ráfagas CPU - E/S *</label>
+                        <input type="text" class="form-control" id="np-rafagas" name="rafagas" placeholder="Números separados por coma. Por ejemplo: 3,5,1" required>
+                    </div>
+                    <div class="form-group mb-0">
+                        <small class="form-text text-muted">Los campos marcados con <b>*</b> son obligatorios.</small>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <div class="form-group form-check mb-0">
+                    <input type="checkbox" class="form-check-input" id="otro-proceso">
+                    <label class="form-check-label" for="otro-proceso">Agregar otro</label>
+                </div>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+                <button type="submit" form="nuevo_proceso" class="btn btn-primary">Guardar</button>
+            </div>
+        </div>
+    </div>
 </div>

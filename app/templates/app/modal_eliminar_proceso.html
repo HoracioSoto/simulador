@@ -9,36 +9,28 @@
 				</button>
 			</div>
 			<div class="modal-body">
-			<table class="table table-bordered table-condensed text-center">
-				<thead>
-					<tr>
-						<th scope="col">PID</th>
-						<th scope="col">Descripción</th>
-						<th scope="col"></th>
-					</tr>
-				</thead>
-				<tbody>
-					<tr>
-						<th scope="row">1</th>
-						<td>daemon</td>
-						<td><input type="checkbox"></td>
-					</tr>
-					<tr>
-						<th scope="row">2</th>
-						<td>kernel</td>
-						<td><input type="checkbox"></td>
-					</tr>
-					<tr>
-						<th scope="row">3</th>
-						<td>services</td>
-						<td><input type="checkbox"></td>
-					</tr>
-				</tbody>
-			</table>
+				<form name="eliminar_procesos" id="eliminar_procesos">
+					<table class="table table-bordered table-condensed text-center" id="tabla-eliminar-procesos">
+						<thead>
+							<tr>
+								<th scope="col">PID</th>
+								<th scope="col">Descripción</th>
+								<th scope="col">
+									<input type="checkbox" name="eliminar_todos" id="eliminar_todos">
+								</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr class="sin-procesos">
+		                        <td colspan="4">No hay procesos cargados.</td>
+		                    </tr>
+						</tbody>
+					</table>
+				</form>
 			</div>
 			<div class="modal-footer">
 				<button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
-				<button type="button" class="btn btn-danger">Eliminar</button>
+				<button type="submit" class="btn btn-danger" form="eliminar_procesos">Eliminar</button>
 			</div>
 		</div>
 	</div>
