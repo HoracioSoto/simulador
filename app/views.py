@@ -35,8 +35,8 @@ def guardar_simulacion(request):
 
 @login_required(login_url='/admin/login/')
 def simulacion(request, id):
-    simulacion = get_object_or_404(Simulacion, id=id)
-    procesos = Proceso.objects.filter(simulacion=simulacion).order_by('simulacion_pid')
+    sim = get_object_or_404(Simulacion, id=id)
+    procs = Proceso.objects.filter(simulacion=sim).order_by('simulacion_pid')
     data = {
         'CPU': {
             'procesos': [
@@ -64,13 +64,13 @@ def simulacion(request, id):
             ],
             'total_time': 600
         },
-        'recursos': range(5)
+        'recursos': range(3)
     }
-    if simulacion.algoritmo_planificacion == 'FCFS':
-        result = run_fcfs(simulacion, procesos)
+    if sim.algoritmo_planificacion == 'FCFS':
+        result = run_fcfs(sim, procs)
     print(result)
     return render(request, 'app/results.html', {
         'data': data,
-        'simulacion': simulacion,
-        'procesos': procesos
+        'simulacion': sim,
+        'procesos': procs
     })
