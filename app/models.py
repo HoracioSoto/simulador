@@ -28,12 +28,14 @@ class Simulacion(models.Model):
     fecha_creacion = models.DateTimeField(auto_now_add=True)
     usuario = models.ForeignKey(User, on_delete=models.CASCADE)
 
+    model = 'Simulacion'
+
     class Meta:
         verbose_name = 'Simulación'
         verbose_name_plural = 'Simulaciones'
 
     def __str__(self):
-        return str(self.id)
+        return '{} - {}'.format(self.id, self.algoritmo_planificacion)
 
 
 class Proceso(models.Model):

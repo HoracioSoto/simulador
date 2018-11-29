@@ -27,6 +27,7 @@
                                 {% if user.is_staff %}
                                     <a class="dropdown-item" href="{% url 'admin:index' %}">Administraci&oacute;n</a>
                                 {% endif %}
+                                <a class="dropdown-item" href="{% url 'simulaciones' %}">Simulaciones</a>
                                 <a class="dropdown-item" href="{% url 'admin:logout' %}">Salir</a>
                             </div>
                         </li>

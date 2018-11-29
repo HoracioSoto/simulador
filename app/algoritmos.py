@@ -3,23 +3,9 @@ import random
 from app.models import *
 
 
-data = {
-    'CPU': {
-        'procesos': [],
-        'ttime': 0
-    },
-    'ES': {
-        'procesos': [],
-        'ttime': 0
-    },
-    'recursos': range(1)
-}
+data = {}
 
-classes = [
-    'primary', 'secondary', 'success', 'danger',
-    'warning', 'info', 'chartreuse', 'darkcyan',
-    'dodgerblue', 'olivedrab', 'violet',
-]
+classes = []
 
 
 def run_fcfs(simulacion, procesos):
@@ -31,6 +17,7 @@ def run_fcfs(simulacion, procesos):
     es_idx = 0
     es_queue = []
     __fcfs_init(procesos, cpu_queue)
+    data = __data_init()
 
     # Traemos los procesos ordenados por ta
     p_ords = __fcfs_order(Proceso.objects.filter(simulacion=simulacion).order_by('tiempo_arribo'))
@@ -213,17 +200,49 @@ def run_fcfs(simulacion, procesos):
         cpu_queue = list(set([x for x in cpu_queue if cpu_queue.count(x) > 1]))
 
     cpu_idx += 1
-    if data['CPU']['ttime'] > data['ES']['ttime']:
+
+    if cpu_time > es_time:
         data['CPU']['ttime'] = cpu_time
         data['ES']['ttime'] = cpu_time
+        # Y el espacio libre en ES
+        data['ES']['procesos'].append({
+            'pid': None,
+            'label': '',
+            'start': es_time,
+            'time': cpu_time - es_time,
+            'end': cpu_time,
+            'class': 'none',
+            'percent': cpu_time - es_time
+        })
     if data['ES']['ttime'] > data['CPU']['ttime']:
         data['CPU']['ttime'] = es_time
         data['ES']['ttime'] = es_time
-
+        # Y el espacio libre en CPU
+        data['CPU']['procesos'].append({
+            'pid': None,
+            'label': '',
+            'start': cpu_time,
+            'time': es_time - cpu_time,
+            'end': es_time,
+            'class': 'none',
+            'percent': es_time - cpu_time
+        })
     return data
 
 
 def __fcfs_init(procesos, cpu_queue):
+    data = {
+        'CPU': {
+            'procesos': [],
+            'ttime': 0
+        },
+        'ES': {
+            'procesos': [],
+            'ttime': 0
+        },
+        'recursos': range(1)
+    }
+
     # Iteramos por primera vez todos los procesos para determinar
     # la cantidad de ráfagas máxima de recursos, tiempo total de cpu y de e/s
     rafagas = 1
@@ -243,6 +262,8 @@ def __fcfs_init(procesos, cpu_queue):
 
 
 def __fcfs_order(procesos):
+    classes = __classes_init()
+
     # Ordenamos y parseamos los procesos
     proc_ord = []
     for proc in procesos:
@@ -264,6 +285,28 @@ def __fcfs_order(procesos):
                 proc_parser['es'].append(int(proc_recursos[idx]))
         proc_ord.append(proc_parser)
     return proc_ord
+
+
+def __data_init():
+    return {
+        'CPU': {
+            'procesos': [],
+            'ttime': 0
+        },
+        'ES': {
+            'procesos': [],
+            'ttime': 0
+        },
+        'recursos': range(1)
+    }
+
+
+def __classes_init():
+    return [
+        'primary', 'secondary', 'success', 'danger',
+        'warning', 'info', 'chartreuse', 'darkcyan',
+        'dodgerblue', 'olivedrab', 'violet',
+    ]
 
 
 def run_sjf():
