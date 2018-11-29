@@ -20,7 +20,7 @@ def run_fcfs(simulacion, procesos):
     __fcfs_init(procesos, cpu_queue, data)
 
     # Traemos los procesos ordenados por ta
-    p_ords = __fcfs_order(Proceso.objects.filter(simulacion=simulacion).order_by('tiempo_arribo'))
+    p_ords = __fcfs_order(Proceso.objects.filter(simulacion=simulacion).order_by('tiempo_arribo', 'simulacion_pid'))
     print(p_ords)
     # Si el primer proceso no tiene ta = 0 agregamos
     if p_ords[0]['ta'] != 0:
@@ -81,6 +81,7 @@ def run_fcfs(simulacion, procesos):
         p_ords[0]['alive'] = False
 
     while len(cpu_queue):
+        origin_len = len(cpu_queue)
         for i in range(len(cpu_queue)):
             if p_ords[cpu_queue[i]]['alive'] and len(p_ords[cpu_queue[i]]['cpu']):
                 # Chequear si no hay espacios entre el ultimo proceso y el que viene
@@ -197,7 +198,8 @@ def run_fcfs(simulacion, procesos):
                     p_ords[cpu_queue[i]]['alive'] = False
 
         # update cpu_queue
-        cpu_queue = list(set([x for x in cpu_queue if cpu_queue.count(x) > 1]))
+        # cpu_queue = list(set([x for x in cpu_queue if cpu_queue.count(x) > 1]))
+        cpu_queue = cpu_queue[origin_len:]
 
     cpu_idx += 1
 

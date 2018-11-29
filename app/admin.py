@@ -5,7 +5,7 @@ from .models import *
 class ProcesoInline(admin.TabularInline):
     model = Proceso
     max_num = 0
-    readonly_fields = (
+    fields = (
         'simulacion_pid',
         'descripcion',
         'tiempo_arribo',

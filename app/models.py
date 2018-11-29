@@ -40,9 +40,11 @@ class Simulacion(models.Model):
 
 class Proceso(models.Model):
     id = models.AutoField(primary_key=True)
-    descripcion = models.CharField(null=True, blank=True, max_length=255)
+    descripcion = models.CharField(null=True, blank=True, max_length=255,
+                                   default='')
     tiempo_arribo = models.IntegerField(verbose_name='Tiempo de arribo')
-    tiempo_recursos = models.TextField(verbose_name='Tiempo de recursos')
+    tiempo_recursos = models.CharField(verbose_name='Tiempo de recursos',
+                                       max_length=255)
     simulacion = models.ForeignKey(Simulacion,
                                    related_name='Procesos',
                                    verbose_name='Simulación',
