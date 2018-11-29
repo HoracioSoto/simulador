@@ -17,20 +17,24 @@ data = {
 
 classes = [
     'primary', 'secondary', 'success', 'danger',
-    'warning', 'info', 'light', 'dark', 'white',
+    'warning', 'info', 'chartreuse', 'darkcyan',
+    'dodgerblue', 'olivedrab', 'violet',
 ]
 
 
 def run_fcfs(simulacion, procesos):
     # inicializamos variables
-    __fcfs_init(procesos)
     cpu_time = 0
     cpu_idx = 0
-    # es_time = 0
-    # Traemos los procesos ordenamos por ta (para este algoritmo)
+    cpu_queue = []
+    es_time = 0
+    es_idx = 0
+    es_queue = []
+    __fcfs_init(procesos, cpu_queue)
+
+    # Traemos los procesos ordenados por ta
     p_ords = __fcfs_order(Proceso.objects.filter(simulacion=simulacion).order_by('tiempo_arribo'))
     print(p_ords)
-
     # Si el primer proceso no tiene ta = 0 agregamos
     if p_ords[0]['ta'] != 0:
         data['CPU']['procesos'].append({
@@ -39,8 +43,8 @@ def run_fcfs(simulacion, procesos):
             'start': 0,
             'time': p_ords[0]['ta'],
             'end': p_ords[0]['ta'],
-            'class': 'bg-none',
-            'percent': format(p_ords[0]['ta'] / data['CPU']['ttime'] * 100, '.2f')
+            'class': 'none',
+            'percent': p_ords[0]['ta']
         })
         cpu_time += p_ords[0]['ta']
 
@@ -53,49 +57,181 @@ def run_fcfs(simulacion, procesos):
         'end': p_ords[0]['ta'] + cpu_tactual,
         'time': cpu_tactual,
         'class': p_ords[0]['class'],
-        'percent': format(cpu_tactual / data['CPU']['ttime'] * 100, '.2f')
+        'percent': cpu_tactual
     })
     cpu_time += cpu_tactual
-    for i in range(1, len(p_ords)):
-        if p_ords[i]['alive'] and len(p_ords[i]['cpu']):
-            # Chequear si no hay espacios entre el ultimo proceso y el que viene
-            if data['CPU']['procesos'][-1]['end'] < p_ords[i]['ta']:
-                cpu_tactual = p_ords[i]['ta'] - data['CPU']['procesos'][-1]['end']
-                print(cpu_tactual)
+    p_ords[0]['ta'] += cpu_time
+    cpu_queue.pop(0)
+
+    # Y el espacio libre en ES
+    data['ES']['procesos'].append({
+        'pid': None,
+        'label': '',
+        'start': 0,
+        'time': cpu_time,
+        'end': cpu_time,
+        'class': 'none',
+        'percent': cpu_time
+    })
+    es_time += cpu_time
+
+    if len(p_ords[0]['es']):
+        es_tactual = p_ords[0]['es'].pop(es_idx)
+        data['ES']['procesos'].append({
+            'pid': p_ords[0]['pid'],
+            'label': p_ords[0]['desc'],
+            'start': es_time,
+            'end': es_time + es_tactual,
+            'time': es_tactual,
+            'class': p_ords[0]['class'],
+            'percent': es_tactual
+        })
+        es_time += es_tactual
+        p_ords[0]['ta'] += es_time
+
+        cpu_queue.append(0)
+    else:
+        p_ords[0]['alive'] = False
+
+    while len(cpu_queue):
+        for i in range(len(cpu_queue)):
+            if p_ords[cpu_queue[i]]['alive'] and len(p_ords[cpu_queue[i]]['cpu']):
+                # Chequear si no hay espacios entre el ultimo proceso y el que viene
+                if data['CPU']['procesos'][-1]['end'] < p_ords[cpu_queue[i]]['ta']:
+                    # Pero antes chequeamos si no hay algun proceso en cola
+                    add_process = False
+                    for j in range(i, len(cpu_queue)):
+                        if (p_ords[cpu_queue[j]]['ta'] < p_ords[cpu_queue[i]]['ta']) and len(p_ords[cpu_queue[j]]['cpu']):
+                            # Tratamos el proceso
+                            add_process = j
+                            cpu_tactual = p_ords[cpu_queue[j]]['cpu'].pop(cpu_idx)
+                            data['CPU']['procesos'].append({
+                                'pid': p_ords[cpu_queue[j]]['pid'],
+                                'label': p_ords[cpu_queue[j]]['desc'],
+                                'start': data['CPU']['procesos'][-1]['end'],
+                                'time': cpu_tactual,
+                                'end': data['CPU']['procesos'][-1]['end'] + cpu_tactual,
+                                'class': p_ords[cpu_queue[j]]['class'],
+                                'percent': cpu_tactual
+                            })
+                            cpu_time += cpu_tactual
+                            p_ords[cpu_queue[j]]['ta'] += cpu_time
+
+                            if len(p_ords[cpu_queue[j]]['es']):
+                                # Chequear si no hay espacios entre el ultimo proceso y el que viene es ES
+                                if data['ES']['procesos'][-1]['end'] < cpu_time:
+                                    es_tactual = cpu_time - data['ES']['procesos'][-1]['end']
+                                    data['ES']['procesos'].append({
+                                        'pid': None,
+                                        'label': '',
+                                        'start': data['ES']['procesos'][-1]['end'],
+                                        'time': es_tactual,
+                                        'end': data['ES']['procesos'][-1]['end'] + es_tactual,
+                                        'class': 'none',
+                                        'percent': es_tactual
+                                    })
+                                    es_time += es_tactual
+
+                                # Tratamos el proceso en ES
+                                es_tactual = p_ords[cpu_queue[j]]['es'].pop(es_idx)
+                                data['ES']['procesos'].append({
+                                    'pid': p_ords[cpu_queue[j]]['pid'],
+                                    'label': p_ords[cpu_queue[j]]['desc'],
+                                    'start': es_time,
+                                    'time': es_tactual,
+                                    'end': es_time + es_tactual,
+                                    'class': p_ords[cpu_queue[j]]['class'],
+                                    'percent': es_tactual
+                                })
+                                es_time += es_tactual
+
+                                cpu_queue.append(cpu_queue[j])
+                    if add_process != False:
+                        # cpu_queue.pop(len(cpu_queue) - cpu_queue[::-1].index(cpu_queue[add_process]) - 1)
+                        cpu_queue.pop(add_process)
+                    if data['CPU']['procesos'][-1]['end'] < p_ords[cpu_queue[i]]['ta']:
+                        cpu_tactual = p_ords[cpu_queue[i]]['ta'] - data['CPU']['procesos'][-1]['end']
+                        data['CPU']['procesos'].append({
+                            'pid': None,
+                            'label': '',
+                            'start': data['CPU']['procesos'][-1]['end'],
+                            'time': cpu_tactual,
+                            'end': data['CPU']['procesos'][-1]['end'] + cpu_tactual,
+                            'class': 'none',
+                            'percent': cpu_tactual
+                        })
+                        cpu_time += cpu_tactual
+
+                # Tratamos el proceso en CPU
+                cpu_tactual = p_ords[cpu_queue[i]]['cpu'].pop(cpu_idx)
                 data['CPU']['procesos'].append({
-                    'pid': None,
-                    'label': '',
+                    'pid': p_ords[cpu_queue[i]]['pid'],
+                    'label': p_ords[cpu_queue[i]]['desc'],
                     'start': data['CPU']['procesos'][-1]['end'],
                     'time': cpu_tactual,
                     'end': data['CPU']['procesos'][-1]['end'] + cpu_tactual,
-                    'class': 'bg-none',
-                    'percent': format(cpu_tactual / data['CPU']['ttime'] * 100, '.2f')
+                    'class': p_ords[cpu_queue[i]]['class'],
+                    'percent': cpu_tactual
                 })
                 cpu_time += cpu_tactual
-            cpu_tactual = p_ords[i]['cpu'].pop(cpu_idx)
-            data['CPU']['procesos'].append({
-                'pid': p_ords[i]['pid'],
-                'label': p_ords[i]['desc'],
-                'start': data['CPU']['procesos'][-1]['end'],
-                'time': cpu_tactual,
-                'end': data['CPU']['procesos'][-1]['end'] + cpu_tactual,
-                'class': p_ords[i]['class'],
-                'percent': format(cpu_tactual / data['CPU']['ttime'] * 100, '.2f')
-            })
-            cpu_time += cpu_tactual
+                p_ords[cpu_queue[i]]['ta'] += cpu_time
+
+                if len(p_ords[cpu_queue[i]]['es']):
+                    # Chequear si no hay espacios entre el ultimo proceso y el que viene es ES
+                    if data['ES']['procesos'][-1]['end'] < cpu_time:
+                        es_tactual = cpu_time - data['ES']['procesos'][-1]['end']
+                        data['ES']['procesos'].append({
+                            'pid': None,
+                            'label': '',
+                            'start': data['ES']['procesos'][-1]['end'],
+                            'time': es_tactual,
+                            'end': data['ES']['procesos'][-1]['end'] + es_tactual,
+                            'class': 'none',
+                            'percent': es_tactual
+                        })
+                        es_time += es_tactual
+
+                    # Tratamos el proceso en ES
+                    es_tactual = p_ords[cpu_queue[i]]['es'].pop(es_idx)
+                    data['ES']['procesos'].append({
+                        'pid': p_ords[cpu_queue[i]]['pid'],
+                        'label': p_ords[cpu_queue[i]]['desc'],
+                        'start': es_time,
+                        'time': es_tactual,
+                        'end': es_time + es_tactual,
+                        'class': p_ords[cpu_queue[i]]['class'],
+                        'percent': es_tactual
+                    })
+                    es_time += es_tactual
+
+                if len(p_ords[cpu_queue[i]]['cpu']):
+                    cpu_queue.append(cpu_queue[i])
+                else:
+                    p_ords[cpu_queue[i]]['alive'] = False
+
+        # update cpu_queue
+        cpu_queue = list(set([x for x in cpu_queue if cpu_queue.count(x) > 1]))
+
     cpu_idx += 1
+    if data['CPU']['ttime'] > data['ES']['ttime']:
+        data['CPU']['ttime'] = cpu_time
+        data['ES']['ttime'] = cpu_time
+    if data['ES']['ttime'] > data['CPU']['ttime']:
+        data['CPU']['ttime'] = es_time
+        data['ES']['ttime'] = es_time
 
     return data
 
 
-def __fcfs_init(procesos):
+def __fcfs_init(procesos, cpu_queue):
     # Iteramos por primera vez todos los procesos para determinar
     # la cantidad de ráfagas máxima de recursos, tiempo total de cpu y de e/s
     rafagas = 1
     data['CPU']['ttime'] = 0
     data['ES']['ttime'] = 0
-    for proc in procesos:
-        proc_recursos = proc.get_recursos()
+    for i in range(len(procesos)):
+        cpu_queue.append(i)
+        proc_recursos = procesos[i].get_recursos()
         for idx in range(len(proc_recursos)):
             if not idx % 2:
                 data['CPU']['ttime'] += int(proc_recursos[idx])
@@ -110,6 +246,7 @@ def __fcfs_order(procesos):
     # Ordenamos y parseamos los procesos
     proc_ord = []
     for proc in procesos:
+        random.shuffle(classes)
         proc_parser = {
             'pid': proc.simulacion_pid,
             'desc': proc.descripcion,
@@ -117,7 +254,7 @@ def __fcfs_order(procesos):
             'cpu': [],
             'es': [],
             'alive': True,
-            'class': classes.pop(random.randrange(len(classes)))
+            'class': classes.pop()
         }
         proc_recursos = proc.get_recursos()
         for idx in range(len(proc_recursos)):

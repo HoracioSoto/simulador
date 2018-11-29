@@ -19,3 +19,18 @@
 .bg-white:last-child {
 	border: none !important;
 }
+.bg-dodgerblue {
+	background-color: #1E90FF !important;
+}
+.bg-darkcyan {
+	background-color: #008B8B !important;
+}
+.bg-chartreuse {
+	background-color: #7FFF00 !important;
+}
+.bg-olivedrab {
+	background-color: #6B8E23 !important;
+}
+.bg-violet {
+	background-color: #EE82EE !important;
+}

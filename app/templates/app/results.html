@@ -61,7 +61,7 @@
                     <h6 class="card-title">Algoritmo de planificación: {{ simulacion.algoritmo_planificacion }}</h6>
                     <div class="progress" id="progress-cpu">
                         {% for proc in data.CPU.procesos  %}
-                            <div class="progress-bar progress-bar-striped progress-bar-animated progress-process {{ proc.class }}" role="progressbar" style="width:{{ proc.percent }}%;" aria-valuenow="15" aria-valuemin="0" aria-valuemax="100" {% if proc.pid %}data-container="body" title="{{ proc.label }}" data-toggle="popover" data-placement="top" data-content="Tiempo: {{ proc.time }}" data-trigger="hover"{% endif %}>
+                            <div class="progress-bar progress-bar-striped progress-bar-animated progress-process bg-{{ proc.class }}" role="progressbar" style="width:{{ proc.percent }}%;" aria-valuenow="15" aria-valuemin="0" aria-valuemax="100" {% if proc.pid %}data-container="body" title="{{ proc.label }}" data-toggle="popover" data-placement="top" data-content="Tiempo: {{ proc.time }}" data-trigger="hover"{% endif %}>
                                 {% if proc.pid %}<b class="text-dark">PID {{ proc.pid }}</b>{% endif %}
                             </div>
                         {% endfor %}
@@ -90,7 +90,7 @@
                     <h6 class="card-title">Algoritmo de planificación: FCFS</h6>
                     <div class="progress" id="progress-es">
                         {% for proc in data.ES.procesos  %}
-                            <div class="progress-bar {{ proc.class }}" role="progressbar" style="width:{{ proc.percent }}%;" aria-valuenow="15" aria-valuemin="0" aria-valuemax="100" {% if proc.pid %}data-container="body" title="{{ proc.label }}" data-toggle="popover" data-placement="top" data-content="Tiempo: {{ proc.time }}" data-trigger="hover"{% endif %}>
+                            <div class="progress-bar bg-{{ proc.class }}" role="progressbar" style="width:{{ proc.percent }}%;" aria-valuenow="15" aria-valuemin="0" aria-valuemax="100" {% if proc.pid %}data-container="body" title="{{ proc.label }}" data-toggle="popover" data-placement="top" data-content="Tiempo: {{ proc.time }}" data-trigger="hover"{% endif %}>
                                 {% if proc.pid %}<b>PID {{ proc.pid }}</b>{% endif %}
                             </div>
                         {% endfor %}
