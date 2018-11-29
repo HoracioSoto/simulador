@@ -16,8 +16,8 @@ def run_fcfs(simulacion, procesos):
     es_time = 0
     es_idx = 0
     es_queue = []
-    __fcfs_init(procesos, cpu_queue)
     data = __data_init()
+    __fcfs_init(procesos, cpu_queue, data)
 
     # Traemos los procesos ordenados por ta
     p_ords = __fcfs_order(Proceso.objects.filter(simulacion=simulacion).order_by('tiempo_arribo'))
@@ -230,19 +230,7 @@ def run_fcfs(simulacion, procesos):
     return data
 
 
-def __fcfs_init(procesos, cpu_queue):
-    data = {
-        'CPU': {
-            'procesos': [],
-            'ttime': 0
-        },
-        'ES': {
-            'procesos': [],
-            'ttime': 0
-        },
-        'recursos': range(1)
-    }
-
+def __fcfs_init(procesos, cpu_queue, data):
     # Iteramos por primera vez todos los procesos para determinar
     # la cantidad de ráfagas máxima de recursos, tiempo total de cpu y de e/s
     rafagas = 1

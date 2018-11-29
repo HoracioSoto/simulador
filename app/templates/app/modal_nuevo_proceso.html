@@ -19,11 +19,11 @@
                     </div>
                     <div class="form-group">
                         <label for="np-ta" class="col-form-label">Tiempo de arribo *</label>
-                        <input type="number" class="form-control" id="np-ta" name="ta" value="0" required>
+                        <input type="number" class="form-control" id="np-ta" name="ta" value="0" max="10000" required>
                     </div>
                     <div class="form-group">
                         <label for="np-rafagas" class="col-form-label">Ráfagas CPU - E/S *</label>
-                        <input type="text" class="form-control" id="np-rafagas" name="rafagas" placeholder="Números separados por coma. Por ejemplo: 3,5,1" required>
+                        <input type="text" class="form-control" id="np-rafagas" name="rafagas" placeholder="Números separados por coma. Por ejemplo: 3,5,1" required maxlength="255">
                     </div>
                     <div class="form-group mb-0">
                         <small class="form-text text-muted">Los campos marcados con <b>*</b> son obligatorios.</small>
