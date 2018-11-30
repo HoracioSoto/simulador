@@ -5,6 +5,7 @@ from django.views.decorators.http import require_POST
 from app.models import *
 from app.fcfs import *
 from app.sjf import *
+from app.rr import *
 
 
 @login_required(login_url='/admin/login/')
@@ -44,7 +45,7 @@ def simulacion(request, id):
     if sim.algoritmo_planificacion == 'SJF':
         data = run_sjf(sim, procs)
     if sim.algoritmo_planificacion == 'RR':
-        data = run_sjf(sim, procs)
+        data = run_rr(sim, procs)
     return render(request, 'app/results.html', {
         'data': data,
         'simulacion': sim,

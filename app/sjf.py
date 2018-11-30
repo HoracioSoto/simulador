@@ -1,7 +1,4 @@
 import random
-import numpy as np
-
-from app.models import *
 
 
 def run_sjf(simulacion, procesos):
@@ -26,12 +23,11 @@ def run_sjf(simulacion, procesos):
         items_es = []
         for i in range(len(procesos_ord)):
             if procesos_ord[i]['alive'] and len(procesos_ord[i]['cpu']):
-                # items_cpu.append([i, procesos_ord[i]['ta_cpu'], procesos_ord[i]['cpu'].pop(0)])
                 items_cpu.append([procesos_ord[i]['ta_cpu'], procesos_ord[i]['cpu'].pop(0), i])
-        # Ordernando por idx 1 y despues 
-        # Index 0 = ta
-        # index 1 = ti
-        # index 2 = posicion del proceso
+        #  Ordernando por idx 1 y despues
+        #  Index 0 = ta
+        #  index 1 = ti
+        #  index 2 = posicion del proceso
         items_cpu = sorted(items_cpu, key=lambda x: (x[1], x[0]))
         for p in items_cpu:
             # Chequear si no hay espacios entre el ultimo proceso y el que viene
@@ -47,7 +43,7 @@ def run_sjf(simulacion, procesos):
                 })
                 sets['cpu']['time'] = p[0]
             # O si no hay nada antes
-            if len(sets['cpu']['queue']) == 0 and p[0] !=0:
+            if len(sets['cpu']['queue']) == 0 and p[0] != 0:
                 sets['cpu']['queue'].append({
                     'pid': None,
                     'label': '',
@@ -92,7 +88,7 @@ def run_sjf(simulacion, procesos):
                 })
                 sets['es']['time'] = p[0]
             # O si no hay nada antes
-            if len(sets['es']['queue']) == 0 and p[0] !=0:
+            if len(sets['es']['queue']) == 0 and p[0] != 0:
                 sets['es']['queue'].append({
                     'pid': None,
                     'label': '',
@@ -116,40 +112,13 @@ def run_sjf(simulacion, procesos):
             sets['es']['time'] += p[1]
             procesos_ord[p[2]]['ta_cpu'] = sets['es']['time']
 
-        # Incrementamos la iteracion
+        # Decrementamos el contador
         sets['max_total'] = sets['max_total'] - 1
 
     # Calculamos porcentajes para visualizacion
-    if sets['cpu']['time'] >= sets['es']['time']:
-        sets['es']['queue'].append({
-            'pid': None,
-            'label': '',
-            'start': sets['es']['time'],
-            'time': sets['cpu']['time'] - sets['es']['time'],
-            'end': sets['cpu']['time'],
-            'class': 'none',
-            'percent': sets['cpu']['time'] - sets['es']['time']
-        })
-        sets['es']['time'] = sets['cpu']['time']
-    else:
-        sets['cpu']['queue'].append({
-            'pid': None,
-            'label': '',
-            'start': sets['cpu']['time'],
-            'time': sets['es']['time'] - sets['cpu']['time'],
-            'end': sets['es']['time'],
-            'class': 'none',
-            'percent': sets['es']['time'] - sets['cpu']['time']
-        })
-        sets['cpu']['time'] = sets['es']['time']
-
-    for j in range(len(sets['cpu']['queue'])):
-        sets['cpu']['queue'][j]['percent'] = format(sets['cpu']['queue'][j]['percent'] / sets['cpu']['time'] * 100, '.2f')
-    for k in range(len(sets['es']['queue'])):
-        sets['es']['queue'][k]['percent'] = format(sets['es']['queue'][k]['percent'] / sets['es']['time'] * 100, '.2f')
+    __sjf_calculate_percents(sets)
 
     return sets
-
 
 
 def __sjf_init(procesos, sets):
@@ -202,8 +171,35 @@ def __sjf_parser_process(procesos):
     return procesos_ord
 
 
-def __sjf_calculate_percents(procesos_ord):
-    return ''
+def __sjf_calculate_percents(sets):
+    if sets['cpu']['time'] >= sets['es']['time']:
+        sets['es']['queue'].append({
+            'pid': None,
+            'label': '',
+            'start': sets['es']['time'],
+            'time': sets['cpu']['time'] - sets['es']['time'],
+            'end': sets['cpu']['time'],
+            'class': 'none',
+            'percent': sets['cpu']['time'] - sets['es']['time']
+        })
+        sets['es']['time'] = sets['cpu']['time']
+    else:
+        sets['cpu']['queue'].append({
+            'pid': None,
+            'label': '',
+            'start': sets['cpu']['time'],
+            'time': sets['es']['time'] - sets['cpu']['time'],
+            'end': sets['es']['time'],
+            'class': 'none',
+            'percent': sets['es']['time'] - sets['cpu']['time']
+        })
+        sets['cpu']['time'] = sets['es']['time']
+
+    for j in range(len(sets['cpu']['queue'])):
+        sets['cpu']['queue'][j]['percent'] = format(sets['cpu']['queue'][j]['percent'] / sets['cpu']['time'] * 100, '.2f')
+    for k in range(len(sets['es']['queue'])):
+        sets['es']['queue'][k]['percent'] = format(sets['es']['queue'][k]['percent'] / sets['es']['time'] * 100, '.2f')
+
 
 def __get_classes():
     return [
