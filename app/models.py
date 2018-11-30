@@ -2,30 +2,10 @@ from django.db import models
 from django.contrib.auth.models import User
 
 
-class Memoria(models.Model):
-    id = models.AutoField(primary_key=True)
-    tamaño = models.IntegerField(verbose_name='Tamaño (KB)')
-    esquema = models.CharField(max_length=30,
-                               verbose_name='Esquema')
-    particiones = models.TextField(null=True, blank=True,
-                                   verbose_name='Particiones')
-    algoritmo_colocacion = models.CharField(max_length=30,
-                                            verbose_name='Tipo')
-
-    class Meta:
-        verbose_name = 'Memoria'
-        verbose_name_plural = 'Memorias'
-
-    def __str__(self):
-        return str(self.id)
-
-
 class Simulacion(models.Model):
     id = models.AutoField(primary_key=True)
     algoritmo_planificacion = models.CharField(max_length=30)
     quantum = models.IntegerField(default=0)
-    # memoria = models.OneToOneField(Memoria,
-    #                                on_delete=models.CASCADE)
     fecha_creacion = models.DateTimeField(auto_now_add=True)
     usuario = models.ForeignKey(User, on_delete=models.CASCADE)
 
@@ -37,6 +17,29 @@ class Simulacion(models.Model):
 
     def __str__(self):
         return '{} - {}'.format(self.id, self.algoritmo_planificacion)
+
+
+class Memoria(models.Model):
+    id = models.AutoField(primary_key=True)
+    size = models.IntegerField(verbose_name='Tamaño (KB)')
+    esquema = models.CharField(max_length=30,
+                               verbose_name='Esquema')
+    particiones = models.CharField(null=True, blank=True,
+                                   verbose_name='Particiones',
+                                   max_length=255)
+    algoritmo_colocacion = models.CharField(max_length=30,
+                                            verbose_name='Tipo')
+    simulacion = models.ForeignKey(Simulacion,
+                                   related_name='Memoria',
+                                   verbose_name='Simulación',
+                                   on_delete=models.CASCADE)
+
+    class Meta:
+        verbose_name = 'Memoria'
+        verbose_name_plural = 'Memorias'
+
+    def __str__(self):
+        return str(self.id)
 
 
 class Proceso(models.Model):
@@ -51,6 +54,8 @@ class Proceso(models.Model):
                                    verbose_name='Simulación',
                                    on_delete=models.CASCADE)
     simulacion_pid = models.IntegerField(verbose_name='PID')
+    size = models.IntegerField(null=True, blank=True,
+                               verbose_name='Tamaño (KB)')
 
     class Meta:
         verbose_name = 'Proceso'

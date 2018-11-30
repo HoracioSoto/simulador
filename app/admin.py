@@ -9,7 +9,19 @@ class ProcesoInline(admin.TabularInline):
         'simulacion_pid',
         'descripcion',
         'tiempo_arribo',
-        'tiempo_recursos'
+        'tiempo_recursos',
+        'size'
+    )
+
+
+class MemoriaInline(admin.TabularInline):
+    model = Memoria
+    max_num = 1
+    fields = (
+        'size',
+        'esquema',
+        'algoritmo_colocacion',
+        'particiones'
     )
 
 
@@ -27,6 +39,7 @@ class SimulacionAdmin(admin.ModelAdmin):
         'usuario__username',
     )
     inlines = [
+        MemoriaInline,
         ProcesoInline,
     ]
 
@@ -37,7 +50,8 @@ class ProcesoAdmin(admin.ModelAdmin):
         'simulacion_pid',
         'descripcion',
         'tiempo_arribo',
-        'tiempo_recursos'
+        'tiempo_recursos',
+        'size'
     )
     search_fields = (
         'simulacion__id',
@@ -45,6 +59,19 @@ class ProcesoAdmin(admin.ModelAdmin):
     )
 
 
-# admin.site.register(Memoria)
+class MemoriaAdmin(admin.ModelAdmin):
+    list_display = (
+        'size',
+        'esquema',
+        'algoritmo_colocacion',
+        'particiones'
+    )
+    search_fields = (
+        'simulacion__id',
+        'simulacion__algoritmo_planificacion',
+    )
+
+
+admin.site.register(Memoria, MemoriaAdmin)
 admin.site.register(Simulacion, SimulacionAdmin)
 admin.site.register(Proceso, ProcesoAdmin)

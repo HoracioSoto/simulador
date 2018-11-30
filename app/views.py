@@ -19,10 +19,39 @@ def guardar_simulacion(request):
     sim = Simulacion(
         algoritmo_planificacion=request.POST.get('algoritmo'),
         quantum=request.POST.get('quantum'),
-        # memoria=Memoria.objects.get(id=1),
         usuario=request.user
     )
     sim.save()
+
+    mem = request.POST.get('memoria_tipo')
+    size = int(request.POST.get('memoria'))
+    m_parts = int(request.POST.get('partes'))
+    if mem == 'pf-best-fit':
+        esquema = 'particion-fija'
+        algoritmo = 'best-fit'
+        parts = ','.join([str(int(size / m_parts)) for i in range(m_parts)])
+    if mem == 'pf-first-fit':
+        esquema = 'particion-fija'
+        algoritmo = 'first-fit'
+        parts = ','.join([str(int(size / m_parts)) for i in range(m_parts)])
+    if mem == 'pv-worst-fit':
+        esquema = 'particion-variable'
+        algoritmo = 'worst-fit'
+        parts = ''
+    if mem == 'pv-first-fit':
+        esquema = 'particion-variable'
+        algoritmo = 'first-fit'
+        parts = ''
+
+    memoria = Memoria(
+        size=size,
+        esquema=esquema,
+        algoritmo_colocacion=algoritmo,
+        simulacion=sim,
+        particiones=parts
+    )
+    memoria.save()
+
     for proceso in request.POST.getlist('procesos'):
         data = proceso.split('-')
         new_process = Proceso(
@@ -30,7 +59,8 @@ def guardar_simulacion(request):
             tiempo_arribo=data[2],
             tiempo_recursos=data[3].strip(),
             simulacion_pid=data[0],
-            simulacion=sim
+            simulacion=sim,
+            size=data[4]
         )
         new_process.save()
     return redirect('simulacion', id=sim.id)
@@ -40,15 +70,35 @@ def guardar_simulacion(request):
 def simulacion(request, id):
     sim = get_object_or_404(Simulacion, id=id)
     procs = Proceso.objects.filter(simulacion=sim).order_by('simulacion_pid')
+    memoria = Memoria.objects.get(simulacion=sim)
     if sim.algoritmo_planificacion == 'FCFS':
         data = run_fcfs(sim, procs)
     if sim.algoritmo_planificacion == 'SJF':
         data = run_sjf(sim, procs)
     if sim.algoritmo_planificacion == 'RR':
         data = run_rr(sim, procs)
+
+    if memoria.particiones:
+        particiones = [int(x) for x in memoria.particiones.split(',')]
+        for i in range(len(particiones)):
+            if i == 0:
+                start = 0
+            else:
+                start = particiones[i - 1]['end']
+            particiones[i] = {
+                'start': start,
+                'size': particiones[i],
+                'end': start + particiones[i],
+                'percent': format(particiones[i] / memoria.size * 100, '.2f')
+            }
+    else:
+        particiones = []
     return render(request, 'app/results.html', {
         'data': data,
         'simulacion': sim,
+        'memoria': memoria,
+        'particiones': particiones,
+        'tot_part': len(particiones),
         'procesos': procs
     })
 

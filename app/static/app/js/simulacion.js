@@ -4,7 +4,7 @@ var simulacion = function() {
         init: function() {
             initNuevoProcesoForm();
             initEliminarProcesoForm();
-            initQuantumForm();
+            initParamsForm();
             initSimulacionForm();
         }
     };
@@ -31,7 +31,8 @@ var initNuevoProcesoForm = function() {
                 dataSim.pid,
                 $('input[name="descripcion"]', this).val().trim(),
                 $('input[name="ta"]', this).val(),
-                $('input[name="rafagas"]', this).val().trim()
+                $('input[name="rafagas"]', this).val().trim(),
+                $('input[name="memoria"]', this).val().trim()
             );
             checkProcessNumer();
             // Reiniciamos el formulario
@@ -52,9 +53,9 @@ var initNuevoProcesoForm = function() {
     });
 };
 
-var addRow = function(pid, descripcion, ta, rafagas) {
+var addRow = function(pid, descripcion, ta, rafagas,memoria) {
     $('#tabla-procesos > tbody:last-child').append(`
-        <tr id="proceso-`+pid+`" data-id="`+pid+`" data-descripcion="`+descripcion+`" data-ta="`+ta+`" data-rafagas="`+rafagas+`" class="item-proceso">
+        <tr id="proceso-`+pid+`" data-id="`+pid+`" data-descripcion="`+descripcion+`" data-ta="`+ta+`" data-rafagas="`+rafagas+`" data-memoria="`+memoria+`" class="item-proceso">
             <th scope="row">`+pid+`</th>
             <td>`+descripcion+`</td>
             <td>`+ta+`</td>
@@ -136,14 +137,16 @@ var initSimulacionForm = function() {
 }
 
 var saveProceso = function(proceso) {
-    var pData = [$(proceso).data('id'), $(proceso).data('descripcion'), $(proceso).data('ta'), $(proceso).data('rafagas')].join('-');
+    var pData = [$(proceso).data('id'), $(proceso).data('descripcion'), $(proceso).data('ta'), $(proceso).data('rafagas'), $(proceso).data('memoria')].join('-');
     $('#simulacion').prepend('<input type="hidden" name="procesos" value="'+pData+'">');
 }
 
-var initQuantumForm = function() {
-    $('form[name="editar_quantum"]').submit(function(e) {
+var initParamsForm = function() {
+    $('form[name="editar_parametros"]').submit(function(e) {
         e.preventDefault();
         $('#input-quantum').val($('#quantum').val());
-        $('#quantumModal').modal('hide');
+        $('#input-memoria').val($('#memoria').val());
+        $('#input-partes').val($('#partes').val());
+        $('#paramsModal').modal('hide');
     });
 };

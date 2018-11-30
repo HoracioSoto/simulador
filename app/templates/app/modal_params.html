@@ -1,0 +1,33 @@
+<!-- Modal parametros -->
+<div class="modal fade" id="paramsModal" tabindex="-1" role="dialog" aria-labelledby="paramsLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="paramsLabel">Editar parámetros</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form name="editar_parametros" id="editar_parametros">
+                    <div class="form-group">
+                        <label for="quantum" class="col-form-label">Quantum</label>
+                        <input type="number" class="form-control" id="quantum" name="quantum" value="10" max="1000">
+                    </div>
+                    <div class="form-group">
+                        <label for="memoria" class="col-form-label">Tamaño memoria (KB)</label>
+                        <input type="number" class="form-control" id="memoria" name="memoria" value="512" max="1000000">
+                    </div>
+                    <div class="form-group">
+                        <label for="partes" class="col-form-label">Particiones</label>
+                        <input type="number" class="form-control" id="partes" name="partes" value="4" max="512" placeholder="Potencia de 2">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+                <button type="submit" form="editar_parametros" class="btn btn-primary">Guardar</button>
+            </div>
+        </div>
+    </div>
+</div>
