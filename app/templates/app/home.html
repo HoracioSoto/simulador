@@ -13,6 +13,7 @@
     <div class="row">
         <form action="{% url 'guardar_simulacion' %}" class="col" method="POST" name="simulacion" id="simulacion">
             {% csrf_token %}
+            <input type="hidden" name="quantum" id="input-quantum" value="10">
             <div class="row">
                 <div class="col-8">
                     <div class="card">
@@ -22,8 +23,9 @@
                                 <div class="dropdown-menu" aria-labelledby="dropdownOpcionesProc">
                                     <a class="dropdown-item" href="#" data-toggle="modal" data-target="#nuevoProcesoModal">Nuevo proceso</a>
                                     <a class="dropdown-item" href="#" data-toggle="modal" data-target="#eliminarProcesoModal">Eliminar procesos</a>
+                                    <a class="dropdown-item" href="#" data-toggle="modal" data-target="#quantumModal">Editar quantum</a>
                                     <div class="dropdown-divider"></div>
-                                    <a class="dropdown-item" href="{% url 'index' %}">Reset</a>
+                                    <a class="dropdown-item" href="{% url 'index' %}">Reiniciar</a>
                                 </div>
                             </div>
                             <h5 class="card-title">Procesos</h5>
@@ -120,6 +122,7 @@
 {% block modals %}
     {% include 'app/modal_nuevo_proceso.html' %}
     {% include 'app/modal_eliminar_proceso.html' %}
+    {% include 'app/modal_quantum.html' %}
 {% endblock modals %}
 
 {% block extra_scripts %}

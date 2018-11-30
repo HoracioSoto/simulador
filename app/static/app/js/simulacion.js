@@ -4,6 +4,7 @@ var simulacion = function() {
         init: function() {
             initNuevoProcesoForm();
             initEliminarProcesoForm();
+            initQuantumForm();
             initSimulacionForm();
         }
     };
@@ -138,3 +139,11 @@ var saveProceso = function(proceso) {
     var pData = [$(proceso).data('id'), $(proceso).data('descripcion'), $(proceso).data('ta'), $(proceso).data('rafagas')].join('-');
     $('#simulacion').prepend('<input type="hidden" name="procesos" value="'+pData+'">');
 }
+
+var initQuantumForm = function() {
+    $('form[name="editar_quantum"]').submit(function(e) {
+        e.preventDefault();
+        $('#input-quantum').val($('#quantum').val());
+        $('#quantumModal').modal('hide');
+    });
+};

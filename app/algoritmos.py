@@ -21,7 +21,6 @@ def run_fcfs(simulacion, procesos):
 
     # Traemos los procesos ordenados por ta
     p_ords = __fcfs_order(Proceso.objects.filter(simulacion=simulacion).order_by('tiempo_arribo', 'simulacion_pid'))
-    print(p_ords)
     # Si el primer proceso no tiene ta = 0 agregamos
     if p_ords[0]['ta'] != 0:
         data['CPU']['procesos'].append({
@@ -297,11 +296,3 @@ def __classes_init():
         'warning', 'info', 'chartreuse', 'darkcyan',
         'dodgerblue', 'olivedrab', 'violet',
     ]
-
-
-def run_sjf():
-    return {}
-
-
-def run_round_robin():
-    return {}

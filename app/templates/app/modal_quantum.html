@@ -1,0 +1,25 @@
+<!-- Modal quantum -->
+<div class="modal fade" id="quantumModal" tabindex="-1" role="dialog" aria-labelledby="quantumLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="quantumLabel">Editar quantum</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form name="editar_quantum" id="editar_quantum">
+                    <div class="form-group">
+                        <label for="quantum" class="col-form-label">Quantum</label>
+                        <input type="number" class="form-control" id="quantum" name="quantum" value="10" max="1000">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+                <button type="submit" form="editar_quantum" class="btn btn-primary">Guardar</button>
+            </div>
+        </div>
+    </div>
+</div>

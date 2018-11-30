@@ -23,6 +23,7 @@ class Memoria(models.Model):
 class Simulacion(models.Model):
     id = models.AutoField(primary_key=True)
     algoritmo_planificacion = models.CharField(max_length=30)
+    quantum = models.IntegerField(default=0)
     # memoria = models.OneToOneField(Memoria,
     #                                on_delete=models.CASCADE)
     fecha_creacion = models.DateTimeField(auto_now_add=True)

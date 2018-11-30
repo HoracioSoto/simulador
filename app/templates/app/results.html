@@ -11,6 +11,9 @@
     <li class="breadcrumb-item">
         <a href="{% url 'index' %}">Inicio</a>
     </li>
+    <li class="breadcrumb-item">
+        <a href="{% url 'simulaciones' %}">Simulaciones</a>
+    </li>
     <li class="breadcrumb-item">Resultados</li>
 {% endblock breadcrumb %}
 
@@ -29,7 +32,7 @@
                                 <th scope="col">PID</th>
                                 <th scope="col">Descripción</th>
                                 <th scope="col">Tiempo arribo</th>
-                                {% for r in data.recursos %}
+                                {% for r in data.resources %}
                                     <th scope="col">
                                         {% if forloop.counter|divisibleby:2 %}E/S{% else %}CPU{% endif %}
                                     </th>
@@ -58,16 +61,22 @@
                     CPU
                 </div>
                 <div class="card-body">
-                    <h6 class="card-title">Algoritmo de planificación: {{ simulacion.algoritmo_planificacion }}</h6>
+                    <h6 class="card-title">
+                        {% if simulacion.algoritmo_planificacion == 'RR' %}
+                            <b>Algoritmo de planificación:</b> Round Robin - <b>Quantum:</b> {{ simulacion.quantum }}
+                        {% else %}
+                            <b>Algoritmo de planificación:</b> {{ simulacion.algoritmo_planificacion }}
+                        {% endif %}
+                    </h6>
                     <div class="progress" id="progress-cpu">
-                        {% for proc in data.CPU.procesos  %}
+                        {% for proc in data.cpu.queue %}
                             <div class="progress-bar progress-bar-striped progress-bar-animated progress-process bg-{{ proc.class }}" role="progressbar" style="width:{{ proc.percent }}%;" aria-valuenow="15" aria-valuemin="0" aria-valuemax="100" {% if proc.pid %}data-container="body" title="{{ proc.label }}" data-toggle="popover" data-placement="top" data-content="Tiempo: {{ proc.time }}" data-trigger="hover"{% endif %}>
                                 {% if proc.pid %}<b class="text-dark">PID {{ proc.pid }}</b>{% endif %}
                             </div>
                         {% endfor %}
                     </div>
                     <div class="progress" id="progress-cpu-time">
-                        {% for proc in data.CPU.procesos  %}
+                        {% for proc in data.cpu.queue  %}
                             <div class="progress-bar bg-white" role="progressbar" style="width:{{ proc.percent }}%;" aria-valuenow="15" aria-valuemin="0" aria-valuemax="100">
                                 <b class="text-dark">
                                     <span class="float-left">{{ proc.start }}</span>
@@ -89,14 +98,14 @@
                 <div class="card-body">
                     <h6 class="card-title">Algoritmo de planificación: FCFS</h6>
                     <div class="progress" id="progress-es">
-                        {% for proc in data.ES.procesos  %}
+                        {% for proc in data.es.queue  %}
                             <div class="progress-bar bg-{{ proc.class }}" role="progressbar" style="width:{{ proc.percent }}%;" aria-valuenow="15" aria-valuemin="0" aria-valuemax="100" {% if proc.pid %}data-container="body" title="{{ proc.label }}" data-toggle="popover" data-placement="top" data-content="Tiempo: {{ proc.time }}" data-trigger="hover"{% endif %}>
                                 {% if proc.pid %}<b>PID {{ proc.pid }}</b>{% endif %}
                             </div>
                         {% endfor %}
                     </div>
                     <div class="progress" id="progress-es-time">
-                        {% for proc in data.ES.procesos  %}
+                        {% for proc in data.es.queue  %}
                             <div class="progress-bar bg-white" role="progressbar" style="width:{{ proc.percent }}%;" aria-valuenow="15" aria-valuemin="0" aria-valuemax="100">
                                 <b class="text-dark">
                                     <span class="float-left">{{ proc.start }}</span>
