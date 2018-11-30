@@ -22,6 +22,7 @@
                     <tr>
                         <th scope="col">ID</th>
                         <th scope="col">Algoritmo de planificación</th>
+                        <th scope="col">Usuario</th>
                         <th scope="col"></th>
                     </tr>
                 </thead>
@@ -30,6 +31,7 @@
                         <tr class="sin-procesos">
                             <th scope="row">{{ sim.id }}</th>
                             <td>{{ sim.algoritmo_planificacion }}</td>
+                            <td>{{ sim.usuario.username }}</td>
                             <td>
                                 <a href="{% url 'simulacion' id=sim.id %}" class="btn btn-success btn-sm">Ver resultados</a>
                             </td>
