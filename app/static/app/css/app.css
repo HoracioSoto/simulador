@@ -1,9 +1,11 @@
 #progress-cpu,
-#progress-es {
+#progress-es,
+#progress-memory {
 	height: 60px;
 }
 #progress-cpu-time,
-#progress-es-time {
+#progress-es-time,
+#progress-memory-size  {
 	height: 30px;
 }
 .progress-bar:hover {
@@ -33,4 +35,10 @@
 }
 .bg-violet {
 	background-color: #EE82EE !important;
+}
+#progress-memory .bg-none {
+	border-right: 1px dotted black;
+}
+#progress-memory .bg-none:last-child {
+	border: none !important;
 }

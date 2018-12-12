@@ -31,6 +31,7 @@
                             <tr>
                                 <th scope="col">PID</th>
                                 <th scope="col">Descripción</th>
+                                <th scope="col">Tamaño (KB)</th>
                                 <th scope="col">Tiempo arribo</th>
                                 {% for r in data.resources %}
                                     <th scope="col">
@@ -44,6 +45,7 @@
                                 <tr class="sin-procesos">
                                     <th scope="row">{{ proceso.simulacion_pid }}</th>
                                     <td>{{ proceso.descripcion }}</td>
+                                    <td>{{ proceso.size }}</td>
                                     <td>{{ proceso.tiempo_arribo }}</td>
                                     {% for rec in proceso.get_recursos %}
                                         <td>{{ rec }}</td>
@@ -128,16 +130,20 @@
                     <h6 class="card-title">
                         <b>Tipo:</b> {% if memoria.esquema == 'particion-fija' %}Particiones fijas{% else %}Particiones variables{% endif %} - <b>Algoritmo coloración:</b> {{ memoria.algoritmo_colocacion }} - <b>Particiones:</b> {{ tot_part }}
                     </h6>
-                    <div class="progress" id="progress-es">
-                        
+                    <div class="progress" id="progress-memory">
+                        {% for proc in data.memory.queue  %}
+                            <div class="progress-bar bg-{{ proc.class }}" role="progressbar" style="width:{{ proc.percent }}%;" aria-valuenow="15" aria-valuemin="0" aria-valuemax="100" {% if proc.pid %}data-container="body" title="{{ proc.label }}" data-toggle="popover" data-placement="top" data-content="Tamaño: {{ proc.size }} kb" data-trigger="hover"{% endif %}>
+                                {% if proc.pid %}<b>PID {{ proc.pid }}</b>{% endif %}
+                            </div>
+                        {% endfor %}
                     </div>
-                    <div class="progress" id="progress-es-time">
+                    <div class="progress" id="progress-memory-size">
                         {% for part in particiones  %}
                             <div class="progress-bar bg-white" role="progressbar" style="width:{{ part.percent }}%;" aria-valuenow="15" aria-valuemin="0" aria-valuemax="100">
                                 <b class="text-dark">
-                                    <span class="float-left">{{ part.start }}</span>
+                                    <span class="float-left">{{ part.start }} kb</span>
                                     {% if forloop.last %}
-                                        <span class="float-right">{{ part.end }}</span>
+                                        <span class="float-right">{{ part.end }} kb</span>
                                     {% endif %}
                                 </b>
                             </div>

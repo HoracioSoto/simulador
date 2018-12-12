@@ -5,118 +5,201 @@ from app.models import *
 
 def run_fcfs(simulacion, procesos):
     sets = {
-        'cpu': {'time': 0, 'queue': [], 'count': 0},
-        'es': {'time': 0, 'queue': [], 'count': 0},
-        'max_total': 0, 'resources': range(5)
+        'cpu': {
+            'queue': [],
+            'time': 0,
+            'count': 0
+        },
+        'es': {
+            'queue': [],
+            'time': 0,
+            'count': 0
+        },
+        'memory': {
+            'size': 0,
+            'type': '',
+            'full': False,
+            'parts': [],
+            'queue': []
+        },
+        'max_total': 0,
+        'resources': range(5),
+        'time': 0
     }
 
-    # Inicializamos el algoritmo
-    __fcfs_init(procesos, sets)
+    # Inicializamos la simulación
+    __fcfs_init(simulacion, procesos, sets)
 
     # Parseamos los procesos
-    procesos_ord = __fcfs_parser_process(Proceso.objects.filter(simulacion=simulacion).order_by('tiempo_arribo', 'simulacion_pid'))
+    procesos = Proceso.objects.filter(simulacion=simulacion).order_by(
+        'tiempo_arribo', 'simulacion_pid')
+    p_ords = __fcfs_parser_process(procesos)
 
     sets['resources'] = range(sets['max_total'])
 
-    # Ejecutamos hasta que se completen todas las ráfagas
-    while sets['max_total']:
-        # Tratamos el orden en las colas
-        items_cpu = []
-        items_es = []
-        for i in range(len(procesos_ord)):
-            if procesos_ord[i]['alive'] and len(procesos_ord[i]['cpu']):
-                items_cpu.append([procesos_ord[i]['ta_cpu'], procesos_ord[i]['cpu'].pop(0), i])
+    while sets['time'] is not None:
+        # Seleccionamos un proceso
+        selecteds = []
+        for i in range(len(p_ords)):
+            if (p_ords[i]['alive'] and p_ords[i]['queue'] == 'cpu' and
+                    p_ords[i]['ta_cpu'] == sets['time']):
+                    selecteds.append(i)
+        for sld in selecteds:
+            # Chequeamos que haya memoria disponible
+            # si el proceso no está en memoria
+            if not p_ords[sld]['in_memory']:
+                if (not sets['memory']['full'] and
+                        sets['memory']['size'] >= p_ords[sld]['size']):
+                    if sets['memory']['type'] == 'first-fit':
+                        for j in range(len(sets['memory']['parts'])):
+                            if (not p_ords[sld]['in_memory'] and
+                                sets['memory']['parts'][j]['available'] and
+                                sets['memory']['parts'][j]['size'] >= p_ords[sld]['size'] and
+                                    (len(sets['memory']['parts'][j]['procs']) == 0 or
+                                        sets['memory']['parts'][j]['procs'][-1]['tf'] is not None)):
+                                sets['memory']['parts'][j]['procs'].append({
+                                    'pid': p_ords[sld]['pid'],
+                                    'label': p_ords[sld]['desc'],
+                                    'size': p_ords[sld]['size'],
+                                    'class': p_ords[sld]['class'],
+                                    'ta': sets['time'],
+                                    'tf': None
+                                })
+                                p_ords[sld]['in_memory'] = True
+                                p_ords[sld]['part'] = j
+                                sets['memory']['parts'][j]['available'] = False
+                    elif sets['memory']['type'] == 'best-fit':
+                        pass
+                    elif sets['memory']['type'] == 'worst-fit':
+                        pass
+            if p_ords[sld]['in_memory']:
+                if len(p_ords[sld]['cpu']):
+                    # Chequear si no hay espacios entre el ultimo proceso y el que viene
+                    if len(sets['cpu']['queue']) and (sets['cpu']['queue'][-1]['end'] < p_ords[sld]['ta_cpu']):
+                        sets['cpu']['queue'].append({
+                            'pid': None,
+                            'size': '',
+                            'start': sets['cpu']['queue'][-1]['end'],
+                            'time': p_ords[sld]['ta_cpu'] - sets['cpu']['queue'][-1]['end'],
+                            'end': p_ords[sld]['ta_cpu'],
+                            'class': 'none',
+                            'percent': p_ords[sld]['ta_cpu'] - sets['cpu']['queue'][-1]['end']
+                        })
+                        sets['cpu']['time'] = p_ords[sld]['ta_cpu']
+                    # O si no hay nada antes
+                    if len(sets['cpu']['queue']) == 0 and p_ords[sld]['ta_cpu'] != 0:
+                        sets['cpu']['queue'].append({
+                            'pid': None,
+                            'label': '',
+                            'start': 0,
+                            'time': p_ords[sld]['ta_cpu'],
+                            'end': p_ords[sld]['ta_cpu'],
+                            'class': 'none',
+                            'percent': p_ords[sld]['ta_cpu']
+                        })
+                        sets['cpu']['time'] = p_ords[sld]['ta_cpu']
+                    # Agregamos el proceso a la cola de cpu
+                    actual_cpu = p_ords[sld]['cpu'].pop(0)
+                    sets['cpu']['queue'].append({
+                        'pid': p_ords[sld]['pid'],
+                        'label': p_ords[sld]['desc'],
+                        'start': sets['cpu']['time'],
+                        'time': actual_cpu,
+                        'end': sets['cpu']['time'] + actual_cpu,
+                        'class': p_ords[sld]['class'],
+                        'percent': actual_cpu
+                    })
+                    sets['cpu']['time'] += actual_cpu
+                    p_ords[sld]['ta_es'] = sets['cpu']['time']
 
-        # Ordernando por idx 0
-        # index 0 = ta
-        # index 1 = ti
-        # Index 2 = posicion del proceso
-        items_cpu = sorted(items_cpu, key=lambda x: (x[0]))
-        for p in items_cpu:
-            # Chequear si no hay espacios entre el ultimo proceso y el que viene
-            if len(sets['cpu']['queue']) and (sets['cpu']['queue'][-1]['end'] < p[0]):
-                sets['cpu']['queue'].append({
-                    'pid': None,
-                    'label': '',
-                    'start': sets['cpu']['queue'][-1]['end'],
-                    'time': p[0] - sets['cpu']['queue'][-1]['end'],
-                    'end': p[0],
-                    'class': 'none',
-                    'percent': p[0] - sets['cpu']['queue'][-1]['end']
-                })
-                sets['cpu']['time'] = p[0]
-            # O si no hay nada antes
-            if len(sets['cpu']['queue']) == 0 and p[0] != 0:
-                sets['cpu']['queue'].append({
-                    'pid': None,
-                    'label': '',
-                    'start': 0,
-                    'time': p[0],
-                    'end': p[0],
-                    'class': 'none',
-                    'percent': p[0]
-                })
-                sets['cpu']['time'] = p[0]
-            # Agregamos el proceso a la cola de cpu
-            sets['cpu']['queue'].append({
-                'pid': procesos_ord[p[2]]['pid'],
-                'label': procesos_ord[p[2]]['desc'],
-                'start': sets['cpu']['time'],
-                'time': p[1],
-                'end': sets['cpu']['time'] + p[1],
-                'class': procesos_ord[p[2]]['class'],
-                'percent': p[1]
-            })
-            sets['cpu']['time'] += p[1]
-            procesos_ord[p[2]]['ta_es'] = sets['cpu']['time']
-
-            # Tratamos la cola de e/s
-            if len(procesos_ord[p[2]]['es']):
-                items_es.append([procesos_ord[p[2]]['ta_es'], procesos_ord[p[2]]['es'].pop(0), p[2]])
+                    # Tratamos E/S
+                    if len(p_ords[sld]['es']):
+                        # Chequear si no hay espacios entre el ultimo proceso y el que viene
+                        if len(sets['es']['queue']) and (sets['es']['queue'][-1]['end'] < p_ords[sld]['ta_es']):
+                            sets['es']['queue'].append({
+                                'pid': None,
+                                'label': '',
+                                'start': sets['es']['queue'][-1]['end'],
+                                'time': p_ords[sld]['ta_es'] - sets['es']['queue'][-1]['end'],
+                                'end': p_ords[sld]['ta_es'],
+                                'class': 'none',
+                                'percent': p_ords[sld]['ta_es'] - sets['es']['queue'][-1]['end']
+                            })
+                            sets['es']['time'] = p_ords[sld]['ta_es']
+                        # O si no hay nada antes
+                        if len(sets['es']['queue']) == 0 and p_ords[sld]['ta_es'] != 0:
+                            sets['es']['queue'].append({
+                                'pid': None,
+                                'label': '',
+                                'start': 0,
+                                'time': p_ords[sld]['ta_es'],
+                                'end': p_ords[sld]['ta_es'],
+                                'class': 'none',
+                                'percent': p_ords[sld]['ta_es']
+                            })
+                            sets['es']['time'] = p_ords[sld]['ta_es']
+                        # Agregamos el proceso a la cola de es
+                        actual_es = p_ords[sld]['es'].pop(0)
+                        sets['es']['queue'].append({
+                            'pid': p_ords[sld]['pid'],
+                            'label': p_ords[sld]['desc'],
+                            'start': sets['es']['time'],
+                            'time': actual_es,
+                            'end': sets['es']['time'] + actual_es,
+                            'class': p_ords[sld]['class'],
+                            'percent': actual_es
+                        })
+                        sets['es']['time'] += actual_es
+                        p_ords[sld]['ta_cpu'] = sets['es']['time']
+                    else:
+                        p_ords[sld]['alive'] = False
+                        sets['memory']['parts'][p_ords[sld]['part']]['procs'][-1]['tf'] = sets['cpu']['time']
+                        sets['memory']['parts'][p_ords[sld]['part']]['available'] = True
+                else:
+                    p_ords[sld]['alive'] = False
+                    sets['memory']['parts'][p_ords[sld]['part']]['procs'][-1]['tf'] = sets['cpu']['time']
+                    sets['memory']['parts'][p_ords[sld]['part']]['available'] = True
             else:
-                procesos_ord[p[2]]['alive'] = False
+                # Si no consigue lugar en memoria lo posponemos
+                p_ords[sld]['ta_cpu'] = sets['cpu']['time']
 
-        items_es = sorted(items_es, key=lambda x: (x[0]))
-        for p in items_es:
-            # Chequear si no hay espacios entre el ultimo proceso y el que viene
-            if len(sets['es']['queue']) and (sets['es']['queue'][-1]['end'] < p[0]):
-                sets['es']['queue'].append({
-                    'pid': None,
-                    'label': '',
-                    'start': sets['es']['queue'][-1]['end'],
-                    'time': p[0] - sets['es']['queue'][-1]['end'],
-                    'end': p[0],
-                    'class': 'none',
-                    'percent': p[0] - sets['es']['queue'][-1]['end']
-                })
-                sets['es']['time'] = p[0]
-            # O si no hay nada antes
-            if len(sets['es']['queue']) == 0 and p[0] != 0:
-                sets['es']['queue'].append({
-                    'pid': None,
-                    'label': '',
+        sets['time'] += 1
+        if sets['time'] == 1000:
+            sets['time'] = None
+
+    for k in range(len(sets['memory']['parts'])):
+        if len(sets['memory']['parts'][k]['procs']):
+            part = sets['memory']['parts'][k]
+            if k == 0:
+                sets['memory']['queue'].append({
+                    'pid': part['procs'][0]['pid'],
+                    'label': part['procs'][0]['label'],
                     'start': 0,
-                    'time': p[0],
-                    'end': p[0],
-                    'class': 'none',
-                    'percent': p[0]
+                    'size': part['procs'][0]['size'],
+                    'end': part['procs'][0]['size'],
+                    'class': part['procs'][0]['class'],
+                    'percent': part['procs'][0]['size']
                 })
-                sets['es']['time'] = p[0]
-            # Agregamos el proceso a la cola de es
-            sets['es']['queue'].append({
-                'pid': procesos_ord[p[2]]['pid'],
-                'label': procesos_ord[p[2]]['desc'],
-                'start': sets['es']['time'],
-                'time': p[1],
-                'end': sets['es']['time'] + p[1],
-                'class': procesos_ord[p[2]]['class'],
-                'percent': p[1]
-            })
-            sets['es']['time'] += p[1]
-            procesos_ord[p[2]]['ta_cpu'] = sets['es']['time']
-
-        # Decrementamos el contador
-        sets['max_total'] = sets['max_total'] - 1
+            else:
+                sets['memory']['queue'].append({
+                    'pid': part['procs'][0]['pid'],
+                    'label': part['procs'][0]['label'],
+                    'start': part['start'],
+                    'size': part['procs'][0]['size'],
+                    'end': part['start'] + part['procs'][0]['size'],
+                    'class': part['procs'][0]['class'],
+                    'percent': part['procs'][0]['size']
+                })
+            if part['size'] != part['procs'][0]['size']:
+                sets['memory']['queue'].append({
+                    'pid': None,
+                    'label': '',
+                    'start': sets['memory']['queue'][-1]['end'],
+                    'size': part['size'] - part['procs'][0]['size'],
+                    'end': part['end'],
+                    'class': 'none',
+                    'percent': part['size'] - part['procs'][0]['size']
+                })
 
     # Calculamos porcentajes para visualizacion
     __fcfs_calculate_percents(sets)
@@ -124,7 +207,7 @@ def run_fcfs(simulacion, procesos):
     return sets
 
 
-def __fcfs_init(procesos, sets):
+def __fcfs_init(simulacion, procesos, sets):
     """
     Iteramos por primera vez todos los procesos para determinar
     la cantidad de ráfagas máxima de cada recurso
@@ -143,13 +226,37 @@ def __fcfs_init(procesos, sets):
         if count_es > sets['es']['count']:
             sets['es']['count'] = count_es
         sets['max_total'] = sets['cpu']['count'] + sets['es']['count']
+    """
+    Inicializamos los parámetros de la memoria
+    """
+    memory = Memoria.objects.get(simulacion=simulacion)
+    sets['memory']['size'] = memory.size
+    sets['memory']['type'] = memory.algoritmo_colocacion
+    parts = memory.particiones.split(',')
+    for p in range(len(parts)):
+        if p == 0:
+            sets['memory']['parts'].append({
+                'size': int(parts[p]),
+                'available': True,
+                'start': 0,
+                'end': int(parts[p]),
+                'procs': []
+            })
+        else:
+            sets['memory']['parts'].append({
+                'size': int(parts[p]),
+                'available': True,
+                'start': sets['memory']['parts'][-1]['end'],
+                'end': sets['memory']['parts'][-1]['end'] + int(parts[p]),
+                'procs': []
+            })
 
 
 def __fcfs_parser_process(procesos):
     """
     Parseamos los procesos para generar una diccionario para trabajar
     """
-    procesos_ord = []
+    p_ords = []
     classes = __get_classes()
     for proc in procesos:
         random.shuffle(classes)
@@ -162,7 +269,10 @@ def __fcfs_parser_process(procesos):
             'es': [],
             'queue': 'cpu',
             'alive': True,
-            'class': classes.pop()
+            'class': classes.pop(),
+            'size': proc.size,
+            'in_memory': False,
+            'part': None
         }
         recursos = proc.get_recursos()
         for i in range(len(recursos)):
@@ -170,8 +280,8 @@ def __fcfs_parser_process(procesos):
                 proc_parser['cpu'].append(int(recursos[i]))
             else:
                 proc_parser['es'].append(int(recursos[i]))
-        procesos_ord.append(proc_parser)
-    return procesos_ord
+        p_ords.append(proc_parser)
+    return p_ords
 
 
 def __fcfs_calculate_percents(sets):
@@ -202,6 +312,8 @@ def __fcfs_calculate_percents(sets):
         sets['cpu']['queue'][j]['percent'] = format(sets['cpu']['queue'][j]['percent'] / sets['cpu']['time'] * 100, '.2f')
     for k in range(len(sets['es']['queue'])):
         sets['es']['queue'][k]['percent'] = format(sets['es']['queue'][k]['percent'] / sets['es']['time'] * 100, '.2f')
+    for x in range(len(sets['memory']['queue'])):
+        sets['memory']['queue'][x]['percent'] = format(sets['memory']['queue'][x]['percent'] / sets['memory']['size'] * 100, '.2f')
 
 
 def __get_classes():
