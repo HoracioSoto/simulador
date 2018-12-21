@@ -36,6 +36,12 @@
 .bg-violet {
 	background-color: #EE82EE !important;
 }
+#progress-memory {
+	border: 1px dotted black !important;
+}
+#progress-memory .bg-none {
+	background-color: #cccccc !important;
+}
 #progress-memory .bg-none {
 	border-right: 1px dotted black;
 }

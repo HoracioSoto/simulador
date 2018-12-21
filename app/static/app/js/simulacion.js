@@ -51,6 +51,20 @@ var initNuevoProcesoForm = function() {
     $('#nuevoProcesoModal').on('hidden.bs.modal', function (e) {
         $('form[name="nuevo_proceso"]').trigger('reset');
     });
+
+    $('#nav-particion-fija').click(function(e) {
+        $('#div-fijas').show();
+
+        $('input[name="partes_variables"], #input-partes-var').attr('disabled', 'disabled');
+        $('#div-variables').hide();
+    });
+
+    $('#nav-particion-variable').click(function(e) {
+        $('#div-variables').show();
+        $('input[name="partes_variables"], #input-partes-var').removeAttr('disabled');
+
+        $('#div-fijas').hide();
+    });
 };
 
 var addRow = function(pid, descripcion, ta, rafagas,memoria) {
@@ -147,6 +161,7 @@ var initParamsForm = function() {
         $('#input-quantum').val($('#quantum').val());
         $('#input-memoria').val($('#memoria').val());
         $('#input-partes').val($('#partes').val());
+        $('#input-partes-var').val($('#partes_variables').val());
         $('#paramsModal').modal('hide');
     });
 };

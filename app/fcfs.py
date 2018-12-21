@@ -17,10 +17,12 @@ def run_fcfs(simulacion, procesos):
         },
         'memory': {
             'size': 0,
+            'schema': '',
             'type': '',
             'full': False,
             'parts': [],
-            'queue': []
+            'queue': [],
+            'instances': 1
         },
         'max_total': 0,
         'resources': range(5),
@@ -50,7 +52,7 @@ def run_fcfs(simulacion, procesos):
             if not p_ords[sld]['in_memory']:
                 if (not sets['memory']['full'] and
                         sets['memory']['size'] >= p_ords[sld]['size']):
-                    if sets['memory']['type'] == 'first-fit':
+                    if sets['memory']['schema'] == 'particion-fija' or sets['memory']['type'] == 'first-fit':
                         for j in range(len(sets['memory']['parts'])):
                             if (not p_ords[sld]['in_memory'] and
                                 sets['memory']['parts'][j]['available'] and
@@ -68,10 +70,32 @@ def run_fcfs(simulacion, procesos):
                                 p_ords[sld]['in_memory'] = True
                                 p_ords[sld]['part'] = j
                                 sets['memory']['parts'][j]['available'] = False
-                    elif sets['memory']['type'] == 'best-fit':
-                        pass
                     elif sets['memory']['type'] == 'worst-fit':
-                        pass
+                        idx_part = 0
+                        diference = 0
+                        for j in range(len(sets['memory']['parts'])):
+                            if (not p_ords[sld]['in_memory'] and
+                                sets['memory']['parts'][j]['available'] and
+                                sets['memory']['parts'][j]['size'] >= p_ords[sld]['size'] and
+                                    (len(sets['memory']['parts'][j]['procs']) == 0 or
+                                        sets['memory']['parts'][j]['procs'][-1]['tf'] is not None)):
+                                if sets['memory']['parts'][j]['size'] - p_ords[sld]['size'] > diference:
+                                    idx_part = j
+                                    diference = sets['memory']['parts'][j]['size'] - p_ords[sld]['size']
+                        print(idx_part)
+                        print(p_ords[sld]['size'])
+                        if diference != 0:
+                            sets['memory']['parts'][idx_part]['procs'].append({
+                                'pid': p_ords[sld]['pid'],
+                                'label': p_ords[sld]['desc'],
+                                'size': p_ords[sld]['size'],
+                                'class': p_ords[sld]['class'],
+                                'ta': sets['time'],
+                                'tf': None
+                            })
+                            p_ords[sld]['in_memory'] = True
+                            p_ords[sld]['part'] = idx_part
+                            sets['memory']['parts'][idx_part]['available'] = False
             if p_ords[sld]['in_memory']:
                 if len(p_ords[sld]['cpu']):
                     # Chequear si no hay espacios entre el ultimo proceso y el que viene
@@ -164,41 +188,59 @@ def run_fcfs(simulacion, procesos):
                 p_ords[sld]['ta_cpu'] = sets['cpu']['time']
 
         sets['time'] += 1
-        if sets['time'] == 1000:
+        if sets['time'] == 2000:
             sets['time'] = None
 
     for k in range(len(sets['memory']['parts'])):
-        if len(sets['memory']['parts'][k]['procs']):
-            part = sets['memory']['parts'][k]
-            if k == 0:
-                sets['memory']['queue'].append({
-                    'pid': part['procs'][0]['pid'],
-                    'label': part['procs'][0]['label'],
-                    'start': 0,
-                    'size': part['procs'][0]['size'],
-                    'end': part['procs'][0]['size'],
-                    'class': part['procs'][0]['class'],
-                    'percent': part['procs'][0]['size']
-                })
-            else:
-                sets['memory']['queue'].append({
-                    'pid': part['procs'][0]['pid'],
-                    'label': part['procs'][0]['label'],
-                    'start': part['start'],
-                    'size': part['procs'][0]['size'],
-                    'end': part['start'] + part['procs'][0]['size'],
-                    'class': part['procs'][0]['class'],
-                    'percent': part['procs'][0]['size']
-                })
-            if part['size'] != part['procs'][0]['size']:
-                sets['memory']['queue'].append({
+        part = sets['memory']['parts'][k]
+        instances = len(part['procs'])
+        if instances:
+            if instances > sets['memory']['instances']:
+                sets['memory']['instances'] = instances
+            for p in range(len(part['procs'])):
+                sets['memory']['queue'].append([])
+                if k == 0:
+                    sets['memory']['queue'][p].append({
+                        'pid': part['procs'][p]['pid'],
+                        'label': part['procs'][p]['label'],
+                        'start': 0,
+                        'size': part['procs'][p]['size'],
+                        'end': part['procs'][p]['size'],
+                        'class': part['procs'][p]['class'],
+                        'percent': part['procs'][p]['size']
+                    })
+                else:
+                    sets['memory']['queue'][p].append({
+                        'pid': part['procs'][p]['pid'],
+                        'label': part['procs'][p]['label'],
+                        'start': part['start'],
+                        'size': part['procs'][p]['size'],
+                        'end': part['start'] + part['procs'][p]['size'],
+                        'class': part['procs'][p]['class'],
+                        'percent': part['procs'][p]['size']
+                    })
+                if part['size'] != part['procs'][p]['size']:
+                    sets['memory']['queue'][p].append({
+                        'pid': None,
+                        'label': '',
+                        'start': sets['memory']['queue'][p][-1]['end'],
+                        'size': part['size'] - part['procs'][p]['size'],
+                        'end': part['end'],
+                        'class': 'none',
+                        'percent': part['size'] - part['procs'][p]['size']
+                    })
+        else:
+            for inst in range(sets['memory']['instances']):
+                if not len(sets['memory']['queue']):
+                    sets['memory']['queue'].append([])
+                sets['memory']['queue'][inst].append({
                     'pid': None,
                     'label': '',
-                    'start': sets['memory']['queue'][-1]['end'],
-                    'size': part['size'] - part['procs'][0]['size'],
-                    'end': part['end'],
+                    'start': part['start'],
+                    'size': part['size'],
+                    'end': part['start'] + part['size'],
                     'class': 'none',
-                    'percent': part['size'] - part['procs'][0]['size']
+                    'percent': part['size']
                 })
 
     # Calculamos porcentajes para visualizacion
@@ -231,6 +273,7 @@ def __fcfs_init(simulacion, procesos, sets):
     """
     memory = Memoria.objects.get(simulacion=simulacion)
     sets['memory']['size'] = memory.size
+    sets['memory']['schema'] = memory.esquema
     sets['memory']['type'] = memory.algoritmo_colocacion
     parts = memory.particiones.split(',')
     for p in range(len(parts)):
@@ -313,7 +356,8 @@ def __fcfs_calculate_percents(sets):
     for k in range(len(sets['es']['queue'])):
         sets['es']['queue'][k]['percent'] = format(sets['es']['queue'][k]['percent'] / sets['es']['time'] * 100, '.2f')
     for x in range(len(sets['memory']['queue'])):
-        sets['memory']['queue'][x]['percent'] = format(sets['memory']['queue'][x]['percent'] / sets['memory']['size'] * 100, '.2f')
+        for p in range(len(sets['memory']['queue'][x])):
+            sets['memory']['queue'][x][p]['percent'] = format(sets['memory']['queue'][x][p]['percent'] / sets['memory']['size'] * 100, '.2f')
 
 
 def __get_classes():

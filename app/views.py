@@ -24,24 +24,32 @@ def guardar_simulacion(request):
     sim.save()
 
     mem = request.POST.get('memoria_tipo')
-    size = int(request.POST.get('memoria'))
     m_parts = int(request.POST.get('partes'))
+
     if mem == 'pf-best-fit':
         esquema = 'particion-fija'
         algoritmo = 'best-fit'
+        size = int(request.POST.get('memoria'))
         parts = ','.join([str(int(size / m_parts)) for i in range(m_parts)])
     if mem == 'pf-first-fit':
         esquema = 'particion-fija'
         algoritmo = 'first-fit'
+        size = int(request.POST.get('memoria'))
         parts = ','.join([str(int(size / m_parts)) for i in range(m_parts)])
     if mem == 'pv-worst-fit':
         esquema = 'particion-variable'
         algoritmo = 'worst-fit'
-        parts = ''
+        parts = request.POST.get('partes_variables').strip()
+        size = 0
+        for x in parts.split(','):
+            size += int(x)
     if mem == 'pv-first-fit':
         esquema = 'particion-variable'
         algoritmo = 'first-fit'
-        parts = ''
+        parts = request.POST.get('partes_variables').strip()
+        size = 0
+        for x in parts.split(','):
+            size += int(x)
 
     memoria = Memoria(
         size=size,
@@ -93,6 +101,7 @@ def simulacion(request, id):
             }
     else:
         particiones = []
+
     return render(request, 'app/results.html', {
         'data': data,
         'simulacion': sim,

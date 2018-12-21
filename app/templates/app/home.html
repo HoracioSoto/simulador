@@ -16,6 +16,7 @@
             <input type="hidden" name="quantum" id="input-quantum" value="10">
             <input type="hidden" name="memoria" id="input-memoria" value="512">
             <input type="hidden" name="partes" id="input-partes" value="4">
+            <input type="hidden" name="partes_variables" id="input-partes-var" value="">
             <div class="row">
                 <div class="col-8">
                     <div class="card">
@@ -87,22 +88,22 @@
                                     <div class="tab-content mt-2 ml-2" id="nav-memoria">
                                         <div class="tab-pane fade show active" id="tab-particion-fija" role="tabpanel" aria-labelledby="nav-particion-fija">
                                             <div class="form-check">
-                                                <input class="form-check-input" type="radio" name="memoria_tipo" id="pf-best-fit" value="pf-best-fit" checked>
-                                                <label class="form-check-label ml-2 align-middle" for="pf-best-fit">Best Fit</label>
+                                                <input class="form-check-input" type="radio" name="memoria_tipo" id="pf-first-fit" value="pf-first-fit" checked>
+                                                <label class="form-check-label ml-2 align-middle" for="pf-first-fit">First Fit</label>
                                             </div>
                                             <div class="form-check">
-                                                <input class="form-check-input" type="radio" name="memoria_tipo" id="pf-first-fit" value="pf-first-fit">
-                                                <label class="form-check-label ml-2 align-middle" for="pf-first-fit">First Fit</label>
+                                                <input class="form-check-input" type="radio" name="memoria_tipo" id="pf-best-fit" value="pf-best-fit">
+                                                <label class="form-check-label ml-2 align-middle" for="pf-best-fit">Best Fit</label>
                                             </div>
                                         </div>
                                         <div class="tab-pane fade" id="tab-particion-variable" role="tabpanel" aria-labelledby="nav-particion-variable">
                                             <div class="form-check">
-                                                <input class="form-check-input" type="radio" name="memoria_tipo" id="pv-worst-fit" value="pv-worst-fit">
-                                                <label class="form-check-label ml-2 align-middle" for="pv-worst-fit">Worst Fit</label>
-                                            </div>
-                                            <div class="form-check">
                                                 <input class="form-check-input" type="radio" name="memoria_tipo" id="pv-first-fit" value="pv-first-fit">
                                                 <label class="form-check-label ml-2 align-middle" for="pv-first-fit">First Fit</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" name="memoria_tipo" id="pv-worst-fit" value="pv-worst-fit">
+                                                <label class="form-check-label ml-2 align-middle" for="pv-worst-fit">Worst Fit</label>
                                             </div>
                                         </div>
                                     </div>

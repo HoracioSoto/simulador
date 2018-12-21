@@ -122,7 +122,7 @@
             </div>
         </div>
         <div class="col-sm-12 mt-3">
-            <div class="card">
+            <div class="card mb-5">
                 <div class="card-header">
                     Memoria ({{ memoria.size }}KB)
                 </div>
@@ -130,25 +130,29 @@
                     <h6 class="card-title">
                         <b>Tipo:</b> {% if memoria.esquema == 'particion-fija' %}Particiones fijas{% else %}Particiones variables{% endif %} - <b>Algoritmo coloración:</b> {{ memoria.algoritmo_colocacion }} - <b>Particiones:</b> {{ tot_part }}
                     </h6>
-                    <div class="progress" id="progress-memory">
-                        {% for proc in data.memory.queue  %}
-                            <div class="progress-bar bg-{{ proc.class }}" role="progressbar" style="width:{{ proc.percent }}%;" aria-valuenow="15" aria-valuemin="0" aria-valuemax="100" {% if proc.pid %}data-container="body" title="{{ proc.label }}" data-toggle="popover" data-placement="top" data-content="Tamaño: {{ proc.size }} kb" data-trigger="hover"{% endif %}>
-                                {% if proc.pid %}<b>PID {{ proc.pid }}</b>{% endif %}
+                    {% for q in data.memory.queue  %}
+                        {% if q %}
+                            <div class="progress" id="progress-memory">
+                                {% for p in q %}
+                                    <div class="progress-bar bg-{{ p.class }}" role="progressbar" style="width:{{ p.percent }}%;" aria-valuenow="15" aria-valuemin="0" aria-valuemax="100" {% if p.pid %}data-container="body" title="{{ p.label }}" data-toggle="popover" data-placement="top" data-content="Tamaño: {{ p.size }} kb" data-trigger="hover"{% endif %}>
+                                        {% if p.pid %}<b>PID {{ p.pid }}</b>{% endif %}
+                                    </div>
+                                {% endfor %}
                             </div>
-                        {% endfor %}
-                    </div>
-                    <div class="progress" id="progress-memory-size">
-                        {% for part in particiones  %}
-                            <div class="progress-bar bg-white" role="progressbar" style="width:{{ part.percent }}%;" aria-valuenow="15" aria-valuemin="0" aria-valuemax="100">
-                                <b class="text-dark">
-                                    <span class="float-left">{{ part.start }} kb</span>
-                                    {% if forloop.last %}
-                                        <span class="float-right">{{ part.end }} kb</span>
-                                    {% endif %}
-                                </b>
+                            <div class="progress" id="progress-memory-size">
+                                {% for part in particiones  %}
+                                    <div class="progress-bar bg-white" role="progressbar" style="width:{{ part.percent }}%;" aria-valuenow="15" aria-valuemin="0" aria-valuemax="100">
+                                        <b class="text-dark">
+                                            <span class="float-left">{{ part.start }} kb</span>
+                                            {% if forloop.last %}
+                                                <span class="float-right">{{ part.end }} kb</span>
+                                            {% endif %}
+                                        </b>
+                                    </div>
+                                {% endfor %}
                             </div>
-                        {% endfor %}
-                    </div>
+                        {% endif %}
+                    {% endfor %}
                 </div>
             </div>
         </div>
