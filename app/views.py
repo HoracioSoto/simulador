@@ -4,8 +4,8 @@ from django.views.decorators.http import require_POST
 
 from app.models import *
 from app.fcfs import *
-from app.sjf import *
-from app.rr import *
+from app.sjf2 import *
+from app.rr2 import *
 
 
 @login_required(login_url='/admin/login/')

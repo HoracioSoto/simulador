@@ -3,7 +3,7 @@ import random
 from app.models import *
 
 
-def run_fcfs(simulacion, procesos):
+def run_sjf(simulacion, procesos):
     sets = {
         'cpu': {
             'queue': [],
@@ -30,12 +30,11 @@ def run_fcfs(simulacion, procesos):
     }
 
     # Inicializamos la simulación
-    __fcfs_init(simulacion, procesos, sets)
+    __sjf_init(simulacion, procesos, sets)
 
     # Parseamos los procesos
-    procesos = Proceso.objects.filter(simulacion=simulacion).order_by(
-        'tiempo_arribo', 'simulacion_pid')
-    p_ords = __fcfs_parser_process(procesos)
+    procesos = Proceso.objects.filter(simulacion=simulacion).order_by('tiempo_arribo')
+    p_ords = __sjf_parser_process(procesos)
 
     sets['resources'] = range(sets['max_total'])
 
@@ -44,9 +43,15 @@ def run_fcfs(simulacion, procesos):
         selecteds = []
         for i in range(len(p_ords)):
             if (p_ords[i]['alive'] and p_ords[i]['queue'] == 'cpu' and
-                    p_ords[i]['ta_cpu'] == sets['time']):
-                    selecteds.append(i)
-        for sld in selecteds:
+                    p_ords[i]['ta_cpu'] == sets['time'] and len(p_ords[i]['cpu'])):
+                    selecteds.append([p_ords[i]['cpu'][0], i])
+
+        #  index 0 = ti
+        #  index 1 = posicion del proceso
+        selecteds = sorted(selecteds, key=lambda x: (x[0]))
+
+        for sld_item in selecteds:
+            sld = sld_item[1]
             # Chequeamos que haya memoria disponible
             # si el proceso no está en memoria
             if not p_ords[sld]['in_memory']:
@@ -242,12 +247,12 @@ def run_fcfs(simulacion, procesos):
                 })
 
     # Calculamos porcentajes para visualizacion
-    __fcfs_calculate_percents(sets)
+    __sjf_calculate_percents(sets)
 
     return sets
 
 
-def __fcfs_init(simulacion, procesos, sets):
+def __sjf_init(simulacion, procesos, sets):
     """
     Iteramos por primera vez todos los procesos para determinar
     la cantidad de ráfagas máxima de cada recurso
@@ -293,7 +298,7 @@ def __fcfs_init(simulacion, procesos, sets):
             })
 
 
-def __fcfs_parser_process(procesos):
+def __sjf_parser_process(procesos):
     """
     Parseamos los procesos para generar una diccionario para trabajar
     """
@@ -325,7 +330,7 @@ def __fcfs_parser_process(procesos):
     return p_ords
 
 
-def __fcfs_calculate_percents(sets):
+def __sjf_calculate_percents(sets):
     if sets['cpu']['time'] >= sets['es']['time']:
         sets['es']['queue'].append({
             'pid': None,
