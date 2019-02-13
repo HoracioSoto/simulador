@@ -41,6 +41,9 @@ class Memoria(models.Model):
     def __str__(self):
         return str(self.id)
 
+    def pretty_particiones(self):
+        return 'kb - '.join(self.particiones.split(',')) + 'kb'
+
 
 class Proceso(models.Model):
     id = models.AutoField(primary_key=True)

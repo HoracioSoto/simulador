@@ -53,7 +53,7 @@ def run_rr(simulacion, procesos):
             if not p_ords[sld]['in_memory']:
                 if (not sets['memory']['full'] and
                         sets['memory']['size'] >= p_ords[sld]['size']):
-                    if sets['memory']['schema'] == 'particion-fija' or sets['memory']['type'] == 'first-fit':
+                    if sets['memory']['schema'] == 'particion-fija' and sets['memory']['type'] == 'first-fit':
                         for j in range(len(sets['memory']['parts'])):
                             if (not p_ords[sld]['in_memory'] and
                                 sets['memory']['parts'][j]['available'] and
@@ -65,14 +65,14 @@ def run_rr(simulacion, procesos):
                                     'label': p_ords[sld]['desc'],
                                     'size': p_ords[sld]['size'],
                                     'class': p_ords[sld]['class'],
-                                    'ta': sets['time'],
+                                    'ta': sets['cpu']['time'],
                                     'tf': None
                                 })
                                 p_ords[sld]['in_memory'] = True
                                 p_ords[sld]['part'] = j
                                 sets['memory']['parts'][j]['available'] = False
-                    elif sets['memory']['type'] == 'worst-fit':
-                        idx_part = 0
+                    elif sets['memory']['type'] == 'best-fit':
+                        idx_part = None
                         diference = 0
                         for j in range(len(sets['memory']['parts'])):
                             if (not p_ords[sld]['in_memory'] and
@@ -80,10 +80,10 @@ def run_rr(simulacion, procesos):
                                 sets['memory']['parts'][j]['size'] >= p_ords[sld]['size'] and
                                     (len(sets['memory']['parts'][j]['procs']) == 0 or
                                         sets['memory']['parts'][j]['procs'][-1]['tf'] is not None)):
-                                if sets['memory']['parts'][j]['size'] - p_ords[sld]['size'] > diference:
+                                if diference == 0 or (sets['memory']['parts'][j]['size'] - p_ords[sld]['size'] < diference):
                                     idx_part = j
                                     diference = sets['memory']['parts'][j]['size'] - p_ords[sld]['size']
-                        if diference != 0:
+                        if idx_part is not None:
                             sets['memory']['parts'][idx_part]['procs'].append({
                                 'pid': p_ords[sld]['pid'],
                                 'label': p_ords[sld]['desc'],
@@ -208,57 +208,8 @@ def run_rr(simulacion, procesos):
         if sets['time'] == 2000:
             sets['time'] = None
 
-    for k in range(len(sets['memory']['parts'])):
-        part = sets['memory']['parts'][k]
-        instances = len(part['procs'])
-        if instances:
-            if instances > sets['memory']['instances']:
-                sets['memory']['instances'] = instances
-            for p in range(len(part['procs'])):
-                sets['memory']['queue'].append([])
-                if k == 0:
-                    sets['memory']['queue'][p].append({
-                        'pid': part['procs'][p]['pid'],
-                        'label': part['procs'][p]['label'],
-                        'start': 0,
-                        'size': part['procs'][p]['size'],
-                        'end': part['procs'][p]['size'],
-                        'class': part['procs'][p]['class'],
-                        'percent': part['procs'][p]['size']
-                    })
-                else:
-                    sets['memory']['queue'][p].append({
-                        'pid': part['procs'][p]['pid'],
-                        'label': part['procs'][p]['label'],
-                        'start': part['start'],
-                        'size': part['procs'][p]['size'],
-                        'end': part['start'] + part['procs'][p]['size'],
-                        'class': part['procs'][p]['class'],
-                        'percent': part['procs'][p]['size']
-                    })
-                if part['size'] != part['procs'][p]['size']:
-                    sets['memory']['queue'][p].append({
-                        'pid': None,
-                        'label': '',
-                        'start': sets['memory']['queue'][p][-1]['end'],
-                        'size': part['size'] - part['procs'][p]['size'],
-                        'end': part['end'],
-                        'class': 'none',
-                        'percent': part['size'] - part['procs'][p]['size']
-                    })
-        else:
-            for inst in range(sets['memory']['instances']):
-                if not len(sets['memory']['queue']):
-                    sets['memory']['queue'].append([])
-                sets['memory']['queue'][inst].append({
-                    'pid': None,
-                    'label': '',
-                    'start': part['start'],
-                    'size': part['size'],
-                    'end': part['start'] + part['size'],
-                    'class': 'none',
-                    'percent': part['size']
-                })
+    # Para los gráficos de cambios de memoria
+    __rr_calculate_memory(sets)
 
     # Calculamos porcentajes para visualizacion
     __rr_calculate_percents(sets)
@@ -375,6 +326,71 @@ def __rr_calculate_percents(sets):
     for x in range(len(sets['memory']['queue'])):
         for p in range(len(sets['memory']['queue'][x])):
             sets['memory']['queue'][x][p]['percent'] = format(sets['memory']['queue'][x][p]['percent'] / sets['memory']['size'] * 100, '.2f')
+
+
+def __rr_calculate_memory(sets):
+    for t in range(sets['cpu']['time']):
+        sets['memory']['queue'].append([])
+        for k in range(len(sets['memory']['parts'])):
+            part = sets['memory']['parts'][k]
+            if t == 11:
+                print(part)
+            instances = len(part['procs'])
+            inst_in = False
+            if instances:
+                for p in range(len(part['procs'])):
+                    if part['procs'][p]['ta'] <= t and t < part['procs'][p]['tf']:
+                        inst_in = True
+                        if k == 0:
+                            sets['memory']['queue'][t].append({
+                                'pid': part['procs'][p]['pid'],
+                                'label': part['procs'][p]['label'],
+                                'start': 0,
+                                'size': part['procs'][p]['size'],
+                                'end': part['procs'][p]['size'],
+                                'class': part['procs'][p]['class'],
+                                'percent': part['procs'][p]['size']
+                            })
+                        else:
+                            sets['memory']['queue'][t].append({
+                                'pid': part['procs'][p]['pid'],
+                                'label': part['procs'][p]['label'],
+                                'start': part['start'],
+                                'size': part['procs'][p]['size'],
+                                'end': part['start'] + part['procs'][p]['size'],
+                                'class': part['procs'][p]['class'],
+                                'percent': part['procs'][p]['size']
+                            })
+                        if part['size'] != part['procs'][p]['size']:
+                            sets['memory']['queue'][t].append({
+                                'pid': None,
+                                'label': '',
+                                'start': sets['memory']['queue'][p][-1]['end'],
+                                'size': part['size'] - part['procs'][p]['size'],
+                                'end': part['end'],
+                                'class': 'none',
+                                'percent': part['size'] - part['procs'][p]['size']
+                            })
+                if not inst_in:
+                    sets['memory']['queue'][t].append({
+                        'pid': None,
+                        'label': '',
+                        'start': part['start'],
+                        'size': part['size'],
+                        'end': part['end'],
+                        'class': 'none',
+                        'percent': part['size']
+                    })
+            else:
+                sets['memory']['queue'][t].append({
+                    'pid': None,
+                    'label': '',
+                    'start': part['start'],
+                    'size': part['size'],
+                    'end': part['start'] + part['size'],
+                    'class': 'none',
+                    'percent': part['size']
+                })
 
 
 def __get_classes():

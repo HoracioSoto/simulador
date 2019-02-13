@@ -16,18 +16,14 @@
                     </div>
                     <div id="div-fijas">
                         <div class="form-group">
-                            <label for="memoria" class="col-form-label">Tamaño memoria (KB)</label>
-                            <input type="number" class="form-control" id="memoria" name="memoria" value="512" max="1000000">
-                        </div>
-                        <div class="form-group">
-                            <label for="partes" class="col-form-label">Particiones</label>
-                            <input type="number" class="form-control" id="partes" name="partes" value="4" max="512" placeholder="Potencia de 2">
+                            <label for="partes" class="col-form-label">Particiones (en KB)</label>
+                            <input type="text" class="form-control" id="partes_fijas" name="partes_fijas" maxlength="255" placeholder="Enteros separados por coma. Ejemplo: 10,50,30">
                         </div>
                     </div>
                     <div id="div-variables" style="display:none;">
                         <div class="form-group">
-                            <label for="partes" class="col-form-label">Particiones (en KB)</label>
-                            <input type="text" class="form-control" id="partes_variables" name="partes_variables" maxlength="255" placeholder="Enteros separados por coma. Ejemplo: 10,50,30" disabled>
+                            <label for="memoria" class="col-form-label">Tamaño memoria (KB)</label>
+                            <input type="number" class="form-control" id="memoria" name="memoria" value="512" max="1000000" disabled>
                         </div>
                     </div>
                 </form>

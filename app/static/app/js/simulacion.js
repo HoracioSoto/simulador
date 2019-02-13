@@ -54,15 +54,15 @@ var initNuevoProcesoForm = function() {
 
     $('#nav-particion-fija').click(function(e) {
         $('#div-fijas').show();
-
-        $('input[name="partes_variables"], #input-partes-var').attr('disabled', 'disabled');
+        $('input[name="partes_fijas"]').removeAttr('disabled');
+        $('#memoria').attr('disabled', 'disabled');
         $('#div-variables').hide();
     });
 
     $('#nav-particion-variable').click(function(e) {
         $('#div-variables').show();
-        $('input[name="partes_variables"], #input-partes-var').removeAttr('disabled');
-
+        $('#memoria').removeAttr('disabled');
+        $('input[name="partes_fijas"]').attr('disabled', 'disabled');
         $('#div-fijas').hide();
     });
 };
@@ -160,8 +160,7 @@ var initParamsForm = function() {
         e.preventDefault();
         $('#input-quantum').val($('#quantum').val());
         $('#input-memoria').val($('#memoria').val());
-        $('#input-partes').val($('#partes').val());
-        $('#input-partes-var').val($('#partes_variables').val());
+        $('#input-partes-fijas').val($('#partes_fijas').val());
         $('#paramsModal').modal('hide');
     });
 };

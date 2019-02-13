@@ -1,4 +1,5 @@
 import random
+import json
 
 from app.models import *
 
@@ -47,19 +48,47 @@ def run_fcfs(simulacion, procesos):
                     p_ords[i]['ta_cpu'] == sets['time']):
                     selecteds.append(i)
         for sld in selecteds:
-            # Chequeamos que haya memoria disponible
-            # si el proceso no está en memoria
+            # Chequeamos que haya memoria disponible si el proceso no está en memoria
             if not p_ords[sld]['in_memory']:
-                if (not sets['memory']['full'] and
-                        sets['memory']['size'] >= p_ords[sld]['size']):
-                    if sets['memory']['schema'] == 'particion-fija' or sets['memory']['type'] == 'first-fit':
-                        for j in range(len(sets['memory']['parts'])):
-                            if (not p_ords[sld]['in_memory'] and
-                                sets['memory']['parts'][j]['available'] and
-                                sets['memory']['parts'][j]['size'] >= p_ords[sld]['size'] and
-                                    (len(sets['memory']['parts'][j]['procs']) == 0 or
-                                        sets['memory']['parts'][j]['procs'][-1]['tf'] is not None)):
-                                sets['memory']['parts'][j]['procs'].append({
+                if (not sets['memory']['full'] and sets['memory']['size'] >= p_ords[sld]['size']):
+                    if sets['memory']['schema'] == 'particion-fija':
+                        if sets['memory']['type'] == 'first-fit':
+                            for j in range(len(sets['memory']['parts'])):
+                                # Si el proc no esta en memoria y la particion esta disponible y entra
+                                if (not p_ords[sld]['in_memory'] and sets['memory']['parts'][j]['available'] and
+                                    sets['memory']['parts'][j]['size'] >= p_ords[sld]['size'] and
+                                        (len(sets['memory']['parts'][j]['procs']) == 0 or
+                                        (sets['memory']['parts'][j]['procs'][-1]['tf'] is not None and sets['memory']['parts'][j]['procs'][-1]['tf'] <= p_ords[sld]['ta_cpu']))):
+                                    sets['memory']['parts'][j]['procs'].append({
+                                        'pid': p_ords[sld]['pid'],
+                                        'label': p_ords[sld]['desc'],
+                                        'size': p_ords[sld]['size'],
+                                        'class': p_ords[sld]['class'],
+                                        'ta': sets['time'],
+                                        'tf': None
+                                    })
+                                    p_ords[sld]['in_memory'] = True
+                                    p_ords[sld]['part'] = j
+                                    sets['memory']['parts'][j]['available'] = False
+                        # best-fit
+                        else:
+                            idx_part, idx_part_min, diff, diff_change = None, None, 0, False
+                            for j in range(len(sets['memory']['parts'])):
+                                diff = 0
+                                # Si el proc no esta en memoria y la particion esta disponible y entra
+                                if (not p_ords[sld]['in_memory'] and sets['memory']['parts'][j]['available'] and
+                                    sets['memory']['parts'][j]['size'] >= p_ords[sld]['size'] and
+                                        (len(sets['memory']['parts'][j]['procs']) == 0 or
+                                            sets['memory']['parts'][j]['procs'][-1]['tf'] is not None)):
+                                    idx_part = j
+                                    if sets['memory']['parts'][idx_part]['size'] - p_ords[sld]['size'] <= diff:
+                                        idx_part_min = idx_part
+                                        diff = sets['memory']['parts'][idx_part]['size'] - p_ords[sld]['size']
+                                        diff_change = True
+                            if diff_change:
+                                idx_part = idx_part_min
+                            if idx_part is not None:
+                                sets['memory']['parts'][idx_part]['procs'].append({
                                     'pid': p_ords[sld]['pid'],
                                     'label': p_ords[sld]['desc'],
                                     'size': p_ords[sld]['size'],
@@ -68,32 +97,36 @@ def run_fcfs(simulacion, procesos):
                                     'tf': None
                                 })
                                 p_ords[sld]['in_memory'] = True
-                                p_ords[sld]['part'] = j
-                                sets['memory']['parts'][j]['available'] = False
-                    elif sets['memory']['type'] == 'worst-fit':
-                        idx_part = 0
-                        diference = 0
-                        for j in range(len(sets['memory']['parts'])):
-                            if (not p_ords[sld]['in_memory'] and
-                                sets['memory']['parts'][j]['available'] and
-                                sets['memory']['parts'][j]['size'] >= p_ords[sld]['size'] and
-                                    (len(sets['memory']['parts'][j]['procs']) == 0 or
-                                        sets['memory']['parts'][j]['procs'][-1]['tf'] is not None)):
-                                if sets['memory']['parts'][j]['size'] - p_ords[sld]['size'] > diference:
-                                    idx_part = j
-                                    diference = sets['memory']['parts'][j]['size'] - p_ords[sld]['size']
-                        if diference != 0:
-                            sets['memory']['parts'][idx_part]['procs'].append({
-                                'pid': p_ords[sld]['pid'],
-                                'label': p_ords[sld]['desc'],
-                                'size': p_ords[sld]['size'],
-                                'class': p_ords[sld]['class'],
-                                'ta': sets['time'],
-                                'tf': None
-                            })
-                            p_ords[sld]['in_memory'] = True
-                            p_ords[sld]['part'] = idx_part
-                            sets['memory']['parts'][idx_part]['available'] = False
+                                p_ords[sld]['part'] = idx_part
+                                sets['memory']['parts'][idx_part]['available'] = False
+                    # particion-variable
+                    else:
+                        # if sets['memory']['type'] == 'first-fit':
+                        #     pass
+                        if sets['memory']['type'] == 'worst-fit':
+                            idx_part = 0
+                            diference = 0
+                            for j in range(len(sets['memory']['parts'])):
+                                if (not p_ords[sld]['in_memory'] and
+                                    sets['memory']['parts'][j]['available'] and
+                                    sets['memory']['parts'][j]['size'] >= p_ords[sld]['size'] and
+                                        (len(sets['memory']['parts'][j]['procs']) == 0 or
+                                            sets['memory']['parts'][j]['procs'][-1]['tf'] is not None)):
+                                    if sets['memory']['parts'][j]['size'] - p_ords[sld]['size'] > diference:
+                                        idx_part = j
+                                        diference = sets['memory']['parts'][j]['size'] - p_ords[sld]['size']
+                            if diference != 0:
+                                sets['memory']['parts'][idx_part]['procs'].append({
+                                    'pid': p_ords[sld]['pid'],
+                                    'label': p_ords[sld]['desc'],
+                                    'size': p_ords[sld]['size'],
+                                    'class': p_ords[sld]['class'],
+                                    'ta': sets['time'],
+                                    'tf': None
+                                })
+                                p_ords[sld]['in_memory'] = True
+                                p_ords[sld]['part'] = idx_part
+                                sets['memory']['parts'][idx_part]['available'] = False
             if p_ords[sld]['in_memory']:
                 if len(p_ords[sld]['cpu']):
                     # Chequear si no hay espacios entre el ultimo proceso y el que viene
@@ -189,61 +222,12 @@ def run_fcfs(simulacion, procesos):
         if sets['time'] == 2000:
             sets['time'] = None
 
-    for k in range(len(sets['memory']['parts'])):
-        part = sets['memory']['parts'][k]
-        instances = len(part['procs'])
-        if instances:
-            if instances > sets['memory']['instances']:
-                sets['memory']['instances'] = instances
-            for p in range(len(part['procs'])):
-                sets['memory']['queue'].append([])
-                if k == 0:
-                    sets['memory']['queue'][p].append({
-                        'pid': part['procs'][p]['pid'],
-                        'label': part['procs'][p]['label'],
-                        'start': 0,
-                        'size': part['procs'][p]['size'],
-                        'end': part['procs'][p]['size'],
-                        'class': part['procs'][p]['class'],
-                        'percent': part['procs'][p]['size']
-                    })
-                else:
-                    sets['memory']['queue'][p].append({
-                        'pid': part['procs'][p]['pid'],
-                        'label': part['procs'][p]['label'],
-                        'start': part['start'],
-                        'size': part['procs'][p]['size'],
-                        'end': part['start'] + part['procs'][p]['size'],
-                        'class': part['procs'][p]['class'],
-                        'percent': part['procs'][p]['size']
-                    })
-                if part['size'] != part['procs'][p]['size']:
-                    sets['memory']['queue'][p].append({
-                        'pid': None,
-                        'label': '',
-                        'start': sets['memory']['queue'][p][-1]['end'],
-                        'size': part['size'] - part['procs'][p]['size'],
-                        'end': part['end'],
-                        'class': 'none',
-                        'percent': part['size'] - part['procs'][p]['size']
-                    })
-        else:
-            for inst in range(sets['memory']['instances']):
-                if not len(sets['memory']['queue']):
-                    sets['memory']['queue'].append([])
-                sets['memory']['queue'][inst].append({
-                    'pid': None,
-                    'label': '',
-                    'start': part['start'],
-                    'size': part['size'],
-                    'end': part['start'] + part['size'],
-                    'class': 'none',
-                    'percent': part['size']
-                })
+    # Ordenamos la memoria para visualizacion
+    __fcfs_order_memory(sets)
 
     # Calculamos porcentajes para visualizacion
     __fcfs_calculate_percents(sets)
-
+    print(sets['memory'])
     return sets
 
 
@@ -266,6 +250,7 @@ def __fcfs_init(simulacion, procesos, sets):
         if count_es > sets['es']['count']:
             sets['es']['count'] = count_es
         sets['max_total'] = sets['cpu']['count'] + sets['es']['count']
+
     """
     Inicializamos los parámetros de la memoria
     """
@@ -325,6 +310,83 @@ def __fcfs_parser_process(procesos):
     return p_ords
 
 
+def __fcfs_order_memory(sets):
+    ta_mem = sets['cpu']['time']
+    instances = 0
+    # busco el menor tiempo de arribo
+    for p in range(len(sets['memory']['parts'])):
+        ta_mem = sets['cpu']['time']
+        part = sets['memory']['parts'][p]
+        for pro in range(len(part['procs'])):
+            # if part['procs'][pro]['ta'] <= ta_mem:
+            ta_mem = part['procs'][pro]['ta']
+            sets['memory']['queue'].append({
+                'ta': ta_mem,
+                'elems': []
+            })
+            for k in range(len(sets['memory']['parts'])):
+                part_s = sets['memory']['parts'][k]
+                if len(part_s['procs']):
+                    for pro_s in range(len(part_s['procs'])):
+                        if part_s['procs'][pro_s]['ta'] <= ta_mem and part_s['procs'][pro_s]['tf'] > ta_mem:
+                            # Se agregan todos los proc en memoria menor a ta_mem
+                            # siempre en la ultima instancia creada
+                            if k == 0:
+                                sets['memory']['queue'][-1]['elems'].append({
+                                    'pid': part_s['procs'][pro_s]['pid'],
+                                    'label': part_s['procs'][pro_s]['label'],
+                                    'start': 0,
+                                    'size': part_s['procs'][pro_s]['size'],
+                                    'end': part_s['procs'][pro_s]['size'],
+                                    'class': part_s['procs'][pro_s]['class'],
+                                    'percent': part_s['procs'][pro_s]['size']
+                                })
+                            else:
+                                sets['memory']['queue'][-1]['elems'].append({
+                                    'pid': part_s['procs'][pro_s]['pid'],
+                                    'label': part_s['procs'][pro_s]['label'],
+                                    'start': part_s['start'],
+                                    'size': part_s['procs'][pro_s]['size'],
+                                    'end': part_s['start'] + part_s['procs'][pro_s]['size'],
+                                    'class': part_s['procs'][pro_s]['class'],
+                                    'percent': part_s['procs'][pro_s]['size']
+                                })
+                            if part_s['size'] != part_s['procs'][pro_s]['size']:
+                                sets['memory']['queue'][-1]['elems'].append({
+                                    'pid': None,
+                                    'label': '',
+                                    'start': sets['memory']['queue'][-1]['elems'][-1]['end'],
+                                    'size': part_s['size'] - part_s['procs'][pro_s]['size'],
+                                    'end': part_s['end'],
+                                    'class': 'none',
+                                    'percent': part_s['size'] - part_s['procs'][pro_s]['size']
+                                })
+                        # Si no hay proceso en esa parte de la memoria para ese ta ponemos vacio
+                        # aca me quede, hay que ver como se visualzia la memoria
+                        # else:
+                        #     sets['memory']['queue'][-1]['elems'].append({
+                        #         'pid': None,
+                        #         'label': '',
+                        #         'start': part_s['start'],
+                        #         'size': part_s['size'],
+                        #         'end': part_s['start'] + part_s['size'],
+                        #         'class': 'none',
+                        #         'percent': part_s['size']
+                        #     })
+                else:
+                    sets['memory']['queue'][-1]['elems'].append({
+                        'pid': None,
+                        'label': '',
+                        'start': part_s['start'],
+                        'size': part_s['size'],
+                        'end': part_s['start'] + part_s['size'],
+                        'class': 'none',
+                        'percent': part_s['size']
+                    })
+    sets['memory']['instances'] = len(sets['memory']['queue'])
+    sets['memory']['queue'] = sorted(sets['memory']['queue'], key=lambda x: (x['ta']))
+
+
 def __fcfs_calculate_percents(sets):
     if sets['cpu']['time'] >= sets['es']['time']:
         sets['es']['queue'].append({
@@ -354,8 +416,8 @@ def __fcfs_calculate_percents(sets):
     for k in range(len(sets['es']['queue'])):
         sets['es']['queue'][k]['percent'] = format(sets['es']['queue'][k]['percent'] / sets['es']['time'] * 100, '.2f')
     for x in range(len(sets['memory']['queue'])):
-        for p in range(len(sets['memory']['queue'][x])):
-            sets['memory']['queue'][x][p]['percent'] = format(sets['memory']['queue'][x][p]['percent'] / sets['memory']['size'] * 100, '.2f')
+        for p in range(len(sets['memory']['queue'][x]['elems'])):
+            sets['memory']['queue'][x]['elems'][p]['percent'] = format(sets['memory']['queue'][x]['elems'][p]['percent'] / sets['memory']['size'] * 100, '.2f')
 
 
 def __get_classes():

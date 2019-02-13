@@ -24,29 +24,28 @@ def guardar_simulacion(request):
     sim.save()
 
     mem = request.POST.get('memoria_tipo')
-    m_parts = int(request.POST.get('partes'))
 
-    if mem == 'pf-best-fit':
-        esquema = 'particion-fija'
-        algoritmo = 'best-fit'
-        size = int(request.POST.get('memoria'))
-        parts = ','.join([str(int(size / m_parts)) for i in range(m_parts)])
-    if mem == 'pf-first-fit':
-        esquema = 'particion-fija'
-        algoritmo = 'first-fit'
-        size = int(request.POST.get('memoria'))
-        parts = ','.join([str(int(size / m_parts)) for i in range(m_parts)])
     if mem == 'pv-worst-fit':
         esquema = 'particion-variable'
         algoritmo = 'worst-fit'
-        parts = request.POST.get('partes_variables').strip()
-        size = 0
-        for x in parts.split(','):
-            size += int(x)
+        size = int(request.POST.get('memoria'))
+        parts = None
     if mem == 'pv-first-fit':
         esquema = 'particion-variable'
         algoritmo = 'first-fit'
-        parts = request.POST.get('partes_variables').strip()
+        size = int(request.POST.get('memoria'))
+        parts = None
+    if mem == 'pf-best-fit':
+        esquema = 'particion-fija'
+        algoritmo = 'best-fit'
+        parts = request.POST.get('partes_fijas').strip()
+        size = 0
+        for x in parts.split(','):
+            size += int(x)
+    if mem == 'pf-first-fit':
+        esquema = 'particion-fija'
+        algoritmo = 'first-fit'
+        parts = request.POST.get('partes_fijas').strip()
         size = 0
         for x in parts.split(','):
             size += int(x)
