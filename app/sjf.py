@@ -103,9 +103,44 @@ def run_sjf(simulacion, procesos):
                                 sets['memory']['parts'][idx_part]['available'] = False
                     # particion-variable
                     else:
-                        # if sets['memory']['type'] == 'first-fit':
-                        #     pass
-                        if sets['memory']['type'] == 'worst-fit':
+                        if sets['memory']['type'] == 'first-fit':
+                            for j in range(len(sets['memory']['parts'])):
+                                print(sets['time'], sets['memory']['parts'][j])
+                                if (not p_ords[sld]['in_memory'] and sets['memory']['parts'][j]['available'] and
+                                    sets['memory']['parts'][j]['size'] >= p_ords[sld]['size']):
+                                    print(sets['time'], sets['memory']['parts'][j])
+                                    sets['memory']['parts'][j]['procs'].append({
+                                        'pid': p_ords[sld]['pid'],
+                                        'label': p_ords[sld]['desc'],
+                                        'size': p_ords[sld]['size'],
+                                        'class': p_ords[sld]['class'],
+                                        'ta': sets['time'],
+                                        'tf': None,
+                                        'memory_data': {
+                                            'size': sets['memory']['parts'][j]['size'],
+                                            'start': sets['memory']['parts'][j]['start'],
+                                            'end': sets['memory']['parts'][j]['end']
+                                        }
+                                    })
+                                    p_ords[sld]['in_memory'] = True
+                                    p_ords[sld]['part'] = j
+                                    sets['memory']['parts'][j]['available'] = False
+
+                                    if p_ords[sld]['size'] < sets['memory']['parts'][j]['size']:
+                                        new_part = {
+                                            'size': sets['memory']['parts'][j]['size'] - p_ords[sld]['size'],
+                                            'available': True,
+                                            'burnt': False,
+                                            'start': sets['memory']['parts'][j]['start'] + p_ords[sld]['size'],
+                                            'end': sets['memory']['parts'][j]['end'],
+                                            'procs': []
+                                        }
+                                        sets['memory']['parts'] = sets['memory']['parts'][:j+1] + [new_part] + sets['memory']['parts'][j+1:]
+                                        sets['memory']['parts'][j]['size'] = p_ords[sld]['size']
+                                        sets['memory']['parts'][j]['end'] = sets['memory']['parts'][j]['start'] + p_ords[sld]['size']
+
+                        # worst-fit
+                        else:
                             idx_part = 0
                             diference = 0
                             for j in range(len(sets['memory']['parts'])):

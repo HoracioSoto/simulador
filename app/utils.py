@@ -28,24 +28,34 @@ def __utils_init(simulacion, procesos, sets):
     sets['memory']['size'] = memory.size
     sets['memory']['schema'] = memory.esquema
     sets['memory']['type'] = memory.algoritmo_colocacion
-    parts = memory.particiones.split(',')
-    for p in range(len(parts)):
-        if p == 0:
-            sets['memory']['parts'].append({
-                'size': int(parts[p]),
-                'available': True,
-                'start': 0,
-                'end': int(parts[p]),
-                'procs': []
-            })
-        else:
-            sets['memory']['parts'].append({
-                'size': int(parts[p]),
-                'available': True,
-                'start': sets['memory']['parts'][-1]['end'],
-                'end': sets['memory']['parts'][-1]['end'] + int(parts[p]),
-                'procs': []
-            })
+    if memory.esquema == 'particion-fija':
+        parts = memory.particiones.split(',')
+        for p in range(len(parts)):
+            if p == 0:
+                sets['memory']['parts'].append({
+                    'size': int(parts[p]),
+                    'available': True,
+                    'start': 0,
+                    'end': int(parts[p]),
+                    'procs': []
+                })
+            else:
+                sets['memory']['parts'].append({
+                    'size': int(parts[p]),
+                    'available': True,
+                    'start': sets['memory']['parts'][-1]['end'],
+                    'end': sets['memory']['parts'][-1]['end'] + int(parts[p]),
+                    'procs': []
+                })
+    else:
+        sets['memory']['parts'].append({
+            'size': memory.size,
+            'available': True,
+            'burnt': False,
+            'start': 0,
+            'end': memory.size,
+            'procs': []
+        })
 
 
 def __utils_parser_process(procesos):
@@ -88,6 +98,41 @@ def __get_classes():
     ]
 
 
+def __utils_compress_memory(sets, part):
+    # if sets['cpu']['time'] < 30:
+    part_old = sets['memory']['parts'][part]
+    sets['memory']['parts'].append(part_old)
+    if sets['memory']['parts'][part + 1] in sets['memory']['parts']:
+        to_part = sets['memory']['parts'][part + 1]
+        if to_part['available'] and not to_part['burnt'] and len(to_part['procs']) == 0:
+            sets['memory']['parts'][part + 1] = {
+                'size': to_part['size'] + part_old['size'],
+                'available': True,
+                'burnt': False,
+                'start': part_old['start'],
+                'end': to_part['end'],
+                'procs': []
+            }
+    if sets['memory']['parts'][part - 1] in sets['memory']['parts']:
+        to_part = sets['memory']['parts'][part - 1]
+        if to_part['available'] and not to_part['burnt'] and len(to_part['procs']) == 0:
+            sets['memory']['parts'][part - 1] = {
+                'size': to_part['size'] + part_old['size'],
+                'available': True,
+                'burnt': False,
+                'start': to_part['start'],
+                'end': part_old['end'],
+                'procs': []
+            }
+    sets['memory']['parts'][part] = {
+        'size': 0,
+        'available': False,
+        'burnt': True,
+        'start': 0,
+        'end': 0,
+        'procs': []
+    }
+
 def __utils_order_memory(sets):
     ta_mem = sets['cpu']['time']
     instances = 0
@@ -96,7 +141,6 @@ def __utils_order_memory(sets):
         ta_mem = sets['cpu']['time']
         part = sets['memory']['parts'][p]
         for pro in range(len(part['procs'])):
-            # if part['procs'][pro]['ta'] <= ta_mem:
             ta_mem = part['procs'][pro]['ta']
             sets['memory']['queue'].append({
                 'ta': ta_mem,
@@ -149,7 +193,17 @@ def __utils_order_memory(sets):
                         'class': 'none',
                         'percent': part_s['size']
                     })
-
+    queue_only = []
+    for ptt in range(len(sets['memory']['queue'])):
+        part = sets['memory']['queue'][ptt]
+        exists = False
+        for ptt2 in range(len(queue_only)):
+            part2 = sets['memory']['queue'][ptt2]
+            if part2['ta'] == part['ta']:
+                exists = True
+        if not exists:
+            queue_only.append(part)
+    sets['memory']['queue'] = queue_only
     queue_for = []
     for ptt in range(len(sets['memory']['queue'])):
         part_old = sets['memory']['queue'][ptt]
@@ -169,7 +223,7 @@ def __utils_order_memory(sets):
                     'percent': part_old['elems'][idx]['start']
                 })
             part_new['elems'].append(part_old['elems'][idx])
-            if idx + 1 in part_old['elems']:
+            try:
                 if part_old['elems'][idx]['end'] != part_old['elems'][idx + 1]['start']:
                     part_new['elems'].append({
                         'pid': None,
@@ -180,6 +234,8 @@ def __utils_order_memory(sets):
                         'class': 'none',
                         'percent': part_old['elems'][idx + 1]['start'] - part_old['elems'][idx]['end']
                     })
+            except Exception as e:
+                pass
         queue_for.append(part_new)
     sets['memory']['queue'] = queue_for
     sets['memory']['instances'] = len(sets['memory']['queue'])
