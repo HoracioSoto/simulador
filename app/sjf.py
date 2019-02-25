@@ -105,10 +105,8 @@ def run_sjf(simulacion, procesos):
                     else:
                         if sets['memory']['type'] == 'first-fit':
                             for j in range(len(sets['memory']['parts'])):
-                                print(sets['time'], sets['memory']['parts'][j])
                                 if (not p_ords[sld]['in_memory'] and sets['memory']['parts'][j]['available'] and
                                     sets['memory']['parts'][j]['size'] >= p_ords[sld]['size']):
-                                    print(sets['time'], sets['memory']['parts'][j])
                                     sets['memory']['parts'][j]['procs'].append({
                                         'pid': p_ords[sld]['pid'],
                                         'label': p_ords[sld]['desc'],
@@ -252,8 +250,8 @@ def run_sjf(simulacion, procesos):
                     sets['memory']['parts'][p_ords[sld]['part']]['procs'][-1]['tf'] = sets['cpu']['time']
                     sets['memory']['parts'][p_ords[sld]['part']]['available'] = True
             else:
-                # Si no consigue lugar en memoria lo posponemos
-                p_ords[sld]['ta_cpu'] = sets['cpu']['time']
+                # Si no consigue lugar en memoria lo posponemos un batido de reloj mas
+                p_ords[sld]['ta_cpu'] = p_ords[sld]['ta_cpu'] + 1
 
         sets['time'] += 1
         if sets['time'] == 2000:

@@ -46,6 +46,7 @@ def run_fcfs(simulacion, procesos):
             if (p_ords[i]['alive'] and p_ords[i]['queue'] == 'cpu' and
                     p_ords[i]['ta_cpu'] == sets['time']):
                     selecteds.append(i)
+
         for sld in selecteds:
             # Chequeamos que haya memoria disponible si el proceso no está en memoria
             if not p_ords[sld]['in_memory']:
@@ -101,10 +102,8 @@ def run_fcfs(simulacion, procesos):
                     else:
                         if sets['memory']['type'] == 'first-fit':
                             for j in range(len(sets['memory']['parts'])):
-                                print(sets['time'], sets['memory']['parts'][j])
                                 if (not p_ords[sld]['in_memory'] and sets['memory']['parts'][j]['available'] and
                                     sets['memory']['parts'][j]['size'] >= p_ords[sld]['size']):
-                                    print(sets['time'], sets['memory']['parts'][j])
                                     sets['memory']['parts'][j]['procs'].append({
                                         'pid': p_ords[sld]['pid'],
                                         'label': p_ords[sld]['desc'],

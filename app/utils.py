@@ -99,7 +99,6 @@ def __get_classes():
 
 
 def __utils_compress_memory(sets, part):
-    # if sets['cpu']['time'] < 30:
     part_old = sets['memory']['parts'][part]
     sets['memory']['parts'].append(part_old)
     if sets['memory']['parts'][part + 1] in sets['memory']['parts']:
