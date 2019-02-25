@@ -29,12 +29,12 @@ def guardar_simulacion(request):
         esquema = 'particion-variable'
         algoritmo = 'worst-fit'
         size = int(request.POST.get('memoria'))
-        parts = None
+        parts = size
     if mem == 'pv-first-fit':
         esquema = 'particion-variable'
         algoritmo = 'first-fit'
         size = int(request.POST.get('memoria'))
-        parts = None
+        parts = size
     if mem == 'pf-best-fit':
         esquema = 'particion-fija'
         algoritmo = 'best-fit'

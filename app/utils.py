@@ -28,33 +28,33 @@ def __utils_init(simulacion, procesos, sets):
     sets['memory']['size'] = memory.size
     sets['memory']['schema'] = memory.esquema
     sets['memory']['type'] = memory.algoritmo_colocacion
-    if memory.esquema == 'particion-fija':
-        parts = memory.particiones.split(',')
-        for p in range(len(parts)):
-            if p == 0:
-                sets['memory']['parts'].append({
-                    'size': int(parts[p]),
-                    'available': True,
-                    'start': 0,
-                    'end': int(parts[p]),
-                    'procs': []
-                })
-            else:
-                sets['memory']['parts'].append({
-                    'size': int(parts[p]),
-                    'available': True,
-                    'start': sets['memory']['parts'][-1]['end'],
-                    'end': sets['memory']['parts'][-1]['end'] + int(parts[p]),
-                    'procs': []
-                })
-    else:
-        sets['memory']['parts'].append({
-            'size': memory.size,
-            'available': True,
-            'burnt': False,
-            'start': 0,
-            'end': memory.size,
-            'procs': []
+    parts = memory.particiones.split(',')
+    for p in range(len(parts)):
+        if p == 0:
+            sets['memory']['parts'].append({
+                'size': int(parts[p]),
+                'available': True,
+                'start': 0,
+                'end': int(parts[p]),
+                'procs': []
+            })
+        else:
+            sets['memory']['parts'].append({
+                'size': int(parts[p]),
+                'available': True,
+                'start': sets['memory']['parts'][-1]['end'],
+                'end': sets['memory']['parts'][-1]['end'] + int(parts[p]),
+                'procs': []
+            })
+    if memory.esquema == 'particion-variable':
+        sets['memory']['parts_var'].update({
+            0: [{
+                'size': memory.size,
+                'available': True,
+                'start': 0,
+                'end': memory.size,
+                'proc': None
+            }]
         })
 
 

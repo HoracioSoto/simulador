@@ -20,7 +20,7 @@ def run_fcfs(simulacion, procesos):
             'type': '',
             'full': False,
             'parts': [],
-            'parts_var': [],
+            'parts_var': {},
             'queue': [],
             'instances': 1
         },
@@ -101,38 +101,38 @@ def run_fcfs(simulacion, procesos):
                     # particion-variable
                     else:
                         if sets['memory']['type'] == 'first-fit':
-                            for j in range(len(sets['memory']['parts'])):
-                                if (not p_ords[sld]['in_memory'] and sets['memory']['parts'][j]['available'] and
-                                    sets['memory']['parts'][j]['size'] >= p_ords[sld]['size']):
-                                    sets['memory']['parts'][j]['procs'].append({
-                                        'pid': p_ords[sld]['pid'],
-                                        'label': p_ords[sld]['desc'],
-                                        'size': p_ords[sld]['size'],
-                                        'class': p_ords[sld]['class'],
-                                        'ta': sets['time'],
-                                        'tf': None,
-                                        'memory_data': {
-                                            'size': sets['memory']['parts'][j]['size'],
-                                            'start': sets['memory']['parts'][j]['start'],
-                                            'end': sets['memory']['parts'][j]['end']
+                            if sets['time'] in sets['memory']['parts_var']:
+                                part_var = sets['memory']['parts_var'][sets['time']]
+                                for j in range(len(part_var)):
+                                    p_select = part_var[j]
+                                    if (not p_ords[sld]['in_memory'] and p_select['available'] and p_select['size'] >= p_ords[sld]['size']):
+                                        sets['memory']['parts_var'][ sets['time'] ][j]['proc'] = {
+                                            'pid': p_ords[sld]['pid'],
+                                            'label': p_ords[sld]['desc'],
+                                            'size': p_ords[sld]['size'],
+                                            'class': p_ords[sld]['class'],
+                                            'ta': sets['time'],
+                                            'tf': None
                                         }
-                                    })
-                                    p_ords[sld]['in_memory'] = True
-                                    p_ords[sld]['part'] = j
-                                    sets['memory']['parts'][j]['available'] = False
+                                        sets['memory']['parts_var'][ sets['time'] ][j]['available'] = False
+                                        p_ords[sld]['in_memory'] = True
+                                        p_ords[sld]['part'] = {
+                                            'time': sets['time'],
+                                            'position': j
+                                        }
 
-                                    if p_ords[sld]['size'] < sets['memory']['parts'][j]['size']:
-                                        new_part = {
-                                            'size': sets['memory']['parts'][j]['size'] - p_ords[sld]['size'],
-                                            'available': True,
-                                            'burnt': False,
-                                            'start': sets['memory']['parts'][j]['start'] + p_ords[sld]['size'],
-                                            'end': sets['memory']['parts'][j]['end'],
-                                            'procs': []
-                                        }
-                                        sets['memory']['parts'] = sets['memory']['parts'][:j+1] + [new_part] + sets['memory']['parts'][j+1:]
-                                        sets['memory']['parts'][j]['size'] = p_ords[sld]['size']
-                                        sets['memory']['parts'][j]['end'] = sets['memory']['parts'][j]['start'] + p_ords[sld]['size']
+                                        if p_ords[sld]['size'] < p_select['size']:
+                                            new_part = {
+                                                'size': p_select['size'] - p_ords[sld]['size'],
+                                                'available': True,
+                                                'start': p_select['start'] + p_ords[sld]['size'],
+                                                'end': p_select['end'],
+                                                'proc': None
+                                            }
+                                            sets['memory']['parts_var'][ sets['time'] ] = sets['memory']['parts_var'][ sets['time'] ][:j+1] + [new_part] + sets['memory']['parts_var'][ sets['time'] ][j+1:]
+                                            sets['memory']['parts_var'][ sets['time'] ][j]['size'] = p_ords[sld]['size']
+                                            sets['memory']['parts_var'][ sets['time'] ][j]['end'] = p_select['start'] + p_ords[sld]['size']
+                                        # Aca me quedé, ya se agrega el proceso a la memoria en el tiempo de cpu actual
 
                         # worst-fit
                         else:
