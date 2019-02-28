@@ -1,5 +1,6 @@
 from app.models import *
 from app.utils import __utils_init, __utils_parser_process, __utils_compress_memory, __utils_order_memory, __utils_calculate_percents
+from copy import deepcopy
 
 
 def run_fcfs(simulacion, procesos):
@@ -21,6 +22,7 @@ def run_fcfs(simulacion, procesos):
             'full': False,
             'parts': [],
             'parts_var': {},
+            'parts_to_remove': [],
             'queue': [],
             'instances': 1
         },
@@ -40,6 +42,11 @@ def run_fcfs(simulacion, procesos):
     sets['resources'] = range(sets['max_total'])
 
     while sets['time'] is not None:
+
+        if sets['memory']['schema'] == 'particion-variable':
+            # Buscamos procesos que deben salir de memoria
+            __utils_compress_memory(sets)
+
         # Seleccionamos un proceso
         selecteds = []
         for i in range(len(p_ords)):
@@ -101,64 +108,45 @@ def run_fcfs(simulacion, procesos):
                     # particion-variable
                     else:
                         if sets['memory']['type'] == 'first-fit':
-                            if sets['time'] in sets['memory']['parts_var']:
-                                part_var = sets['memory']['parts_var'][sets['time']]
-                                for j in range(len(part_var)):
-                                    p_select = part_var[j]
-                                    if (not p_ords[sld]['in_memory'] and p_select['available'] and p_select['size'] >= p_ords[sld]['size']):
-                                        sets['memory']['parts_var'][ sets['time'] ][j]['proc'] = {
-                                            'pid': p_ords[sld]['pid'],
-                                            'label': p_ords[sld]['desc'],
-                                            'size': p_ords[sld]['size'],
-                                            'class': p_ords[sld]['class'],
-                                            'ta': sets['time'],
-                                            'tf': None
-                                        }
-                                        sets['memory']['parts_var'][ sets['time'] ][j]['available'] = False
-                                        p_ords[sld]['in_memory'] = True
-                                        p_ords[sld]['part'] = {
-                                            'time': sets['time'],
-                                            'position': j
+                            part_var = deepcopy(sets['memory']['parts_var'][ sets['time'] ])
+                            for jp in range(len(part_var)):
+                                p_select = part_var[jp]
+                                if (not p_ords[sld]['in_memory']) and p_select['available'] and (p_ords[sld]['size'] <= p_select['size']):
+                                    part_var[jp]['proc'] = {
+                                        'pid': p_ords[sld]['pid'],
+                                        'label': p_ords[sld]['desc'],
+                                        'size': p_ords[sld]['size'],
+                                        'class': p_ords[sld]['class'],
+                                        'ta': sets['time'],
+                                        'tf': None
+                                    }
+                                    part_var[jp]['available'] = False
+                                    p_ords[sld]['in_memory'] = True
+                                    p_ords[sld]['part'] = {
+                                        'time': sets['time'],
+                                        'position': jp
+                                    }
+
+                                    if p_ords[sld]['size'] < p_select['size']:
+                                        new_part = {
+                                            'available': True,
+                                            'start': p_select['start'] + p_ords[sld]['size'],
+                                            'end': p_select['end'],
+                                            'size': p_select['size'] - p_ords[sld]['size'],
+                                            'percent': p_select['size'] - p_ords[sld]['size'],
+                                            'proc': None
                                         }
 
-                                        if p_ords[sld]['size'] < p_select['size']:
-                                            new_part = {
-                                                'size': p_select['size'] - p_ords[sld]['size'],
-                                                'available': True,
-                                                'start': p_select['start'] + p_ords[sld]['size'],
-                                                'end': p_select['end'],
-                                                'proc': None
-                                            }
-                                            sets['memory']['parts_var'][ sets['time'] ] = sets['memory']['parts_var'][ sets['time'] ][:j+1] + [new_part] + sets['memory']['parts_var'][ sets['time'] ][j+1:]
-                                            sets['memory']['parts_var'][ sets['time'] ][j]['size'] = p_ords[sld]['size']
-                                            sets['memory']['parts_var'][ sets['time'] ][j]['end'] = p_select['start'] + p_ords[sld]['size']
-                                        # Aca me quedé, ya se agrega el proceso a la memoria en el tiempo de cpu actual
-
+                                        part_var[jp]['size'] = p_ords[sld]['size']
+                                        part_var[jp]['percent'] = p_ords[sld]['size']
+                                        part_var[jp]['end'] = p_select['start'] + p_ords[sld]['size']
+                                        part_var = part_var[:jp+1] + [ new_part ] + part_var[jp+1:]
+                                else:
+                                    pass
+                            sets['memory']['parts_var'][ sets['time'] ] = deepcopy(part_var)
                         # worst-fit
                         else:
-                            idx_part = 0
-                            diference = 0
-                            for j in range(len(sets['memory']['parts'])):
-                                if (not p_ords[sld]['in_memory'] and
-                                    sets['memory']['parts'][j]['available'] and
-                                    sets['memory']['parts'][j]['size'] >= p_ords[sld]['size'] and
-                                        (len(sets['memory']['parts'][j]['procs']) == 0 or
-                                            sets['memory']['parts'][j]['procs'][-1]['tf'] is not None)):
-                                    if sets['memory']['parts'][j]['size'] - p_ords[sld]['size'] > diference:
-                                        idx_part = j
-                                        diference = sets['memory']['parts'][j]['size'] - p_ords[sld]['size']
-                            if diference != 0:
-                                sets['memory']['parts'][idx_part]['procs'].append({
-                                    'pid': p_ords[sld]['pid'],
-                                    'label': p_ords[sld]['desc'],
-                                    'size': p_ords[sld]['size'],
-                                    'class': p_ords[sld]['class'],
-                                    'ta': sets['time'],
-                                    'tf': None
-                                })
-                                p_ords[sld]['in_memory'] = True
-                                p_ords[sld]['part'] = idx_part
-                                sets['memory']['parts'][idx_part]['available'] = False
+                            pass
             if p_ords[sld]['in_memory']:
                 if len(p_ords[sld]['cpu']):
                     # Chequear si no hay espacios entre el ultimo proceso y el que viene
@@ -240,20 +228,32 @@ def run_fcfs(simulacion, procesos):
                         p_ords[sld]['ta_cpu'] = sets['es']['time']
                     else:
                         p_ords[sld]['alive'] = False
-                        sets['memory']['parts'][p_ords[sld]['part']]['procs'][-1]['tf'] = sets['cpu']['time']
-                        sets['memory']['parts'][p_ords[sld]['part']]['available'] = True
-                        # __utils_compress_memory(sets, p_ords[sld]['part'])
+                        if sets['memory']['schema'] == 'particion-fija':
+                            sets['memory']['parts'][p_ords[sld]['part']]['procs'][-1]['tf'] = sets['cpu']['time']
+                            sets['memory']['parts'][p_ords[sld]['part']]['available'] = True
+                        else:
+                            # Agregamos el proceso a la cola para ser quitamos de memoria
+                            sets['memory']['parts_to_remove'].append({
+                                'pid': p_ords[sld]['pid'],
+                                'time': sets['cpu']['time']
+                            })
                 else:
-                    p_ords[sld]['alive'] = False
-                    sets['memory']['parts'][p_ords[sld]['part']]['procs'][-1]['tf'] = sets['cpu']['time']
-                    sets['memory']['parts'][p_ords[sld]['part']]['available'] = True
+                    print('no tiene mas cpu')
             else:
                 # Si no consigue lugar en memoria lo posponemos un batido de reloj mas
-                p_ords[sld]['ta_cpu'] = p_ords[sld]['ta_cpu'] + 1
+                p_ords[sld]['ta_cpu'] += 1
+
+        if sets['memory']['schema'] == 'particion-variable':
+            # copiamos la memoria al proximo tiempo
+            if not sets['time'] + 1 in sets['memory']['parts_var']:
+                sets['memory']['parts_var'].update({
+                    sets['time'] + 1: deepcopy(sets['memory']['parts_var'][sets['time']])
+                })
 
         sets['time'] += 1
         if sets['time'] == 2000:
             sets['time'] = None
+
     # Ordenamos la memoria para visualizacion
     __utils_order_memory(sets)
 

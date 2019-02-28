@@ -1,4 +1,5 @@
 import random
+from copy import deepcopy
 
 from app.models import *
 
@@ -49,10 +50,11 @@ def __utils_init(simulacion, procesos, sets):
     if memory.esquema == 'particion-variable':
         sets['memory']['parts_var'].update({
             0: [{
-                'size': memory.size,
                 'available': True,
                 'start': 0,
                 'end': memory.size,
+                'size': memory.size,
+                'percent': memory.size,
                 'proc': None
             }]
         })
@@ -98,39 +100,65 @@ def __get_classes():
     ]
 
 
-def __utils_compress_memory(sets, part):
-    part_old = sets['memory']['parts'][part]
-    sets['memory']['parts'].append(part_old)
-    if sets['memory']['parts'][part + 1] in sets['memory']['parts']:
-        to_part = sets['memory']['parts'][part + 1]
-        if to_part['available'] and not to_part['burnt'] and len(to_part['procs']) == 0:
-            sets['memory']['parts'][part + 1] = {
-                'size': to_part['size'] + part_old['size'],
-                'available': True,
-                'burnt': False,
-                'start': part_old['start'],
-                'end': to_part['end'],
-                'procs': []
-            }
-    if sets['memory']['parts'][part - 1] in sets['memory']['parts']:
-        to_part = sets['memory']['parts'][part - 1]
-        if to_part['available'] and not to_part['burnt'] and len(to_part['procs']) == 0:
-            sets['memory']['parts'][part - 1] = {
-                'size': to_part['size'] + part_old['size'],
-                'available': True,
-                'burnt': False,
-                'start': to_part['start'],
-                'end': part_old['end'],
-                'procs': []
-            }
-    sets['memory']['parts'][part] = {
-        'size': 0,
-        'available': False,
-        'burnt': True,
-        'start': 0,
-        'end': 0,
-        'procs': []
-    }
+def __utils_compress_memory(sets):
+    new_to_rem = []
+    new_part_to_copy = []
+    for x in range(len(sets['memory']['parts_to_remove'])):
+        to_rem = sets['memory']['parts_to_remove'][x].copy()
+        if to_rem['time'] == sets['time'] and to_rem['time'] in sets['memory']['parts_var']:
+            p_to_copy = deepcopy(sets['memory']['parts_var'][ to_rem['time'] ])
+            for j in range(len(p_to_copy)):
+                if p_to_copy[j]['proc'] is not None and p_to_copy[j]['proc']['pid'] == to_rem['pid']:
+                    # Si es la primera parte
+                    if j == 0:
+                        # y tiene una despues
+                        if j+1 in p_to_copy and p_to_copy[j+1]['available'] and p_to_copy[j+1]['proc'] is None:
+                            p_to_copy[j+1]['start'] = p_to_copy[j]['start']
+                            p_to_copy[j+1]['size'] += p_to_copy[j]['size']
+                            new_part_to_copy = deepcopy(p_to_copy[j+1:])
+                        else:
+                            p_to_copy[j]['available'] = True
+                            p_to_copy[j]['proc'] = None
+                            new_part_to_copy = deepcopy(p_to_copy)
+                    # Si es la ultima parte
+                    elif j == (len(p_to_copy) - 1):
+                        # y tiene una antes
+                        if p_to_copy[j-1] in p_to_copy and p_to_copy[j-1]['available'] and p_to_copy[j-1]['proc'] is None:
+                            p_to_copy[j-1]['end'] = p_to_copy[j]['end']
+                            p_to_copy[j-1]['size'] += p_to_copy[j]['size']
+                            new_part_to_copy = deepcopy(p_to_copy[:-1])
+                        else:
+                            p_to_copy[j]['available'] = True
+                            p_to_copy[j]['proc'] = None
+                            new_part_to_copy = deepcopy(p_to_copy)
+                    # Entonces esta en el medio
+                    else:
+                        # Tiene partes antes y/o despues
+                        if (p_to_copy[j-1] in p_to_copy and p_to_copy[j+1] in p_to_copy and
+                                p_to_copy[j-1]['available'] and p_to_copy[j-1]['proc'] is None and
+                                    p_to_copy[j+1]['available'] and p_to_copy[j+1]['proc'] is None):
+                            p_to_copy[j-1]['end'] = p_to_copy[j+1]['end']
+                            p_to_copy[j-1]['size'] += p_to_copy[j]['size'] + p_to_copy[j+1]['size']
+                            new_part_to_copy = deepcopy(p_to_copy[:j] + p_to_copy[j+2:])
+                        elif p_to_copy[j-1] in p_to_copy and p_to_copy[j-1]['available'] and p_to_copy[j-1]['proc'] is None:
+                            p_to_copy[j-1]['end'] = p_to_copy[j]['end']
+                            p_to_copy[j-1]['size'] += p_to_copy[j]['size']
+                            new_part_to_copy = deepcopy(p_to_copy[:j] + p_to_copy[j+1:])
+                        elif p_to_copy[j+1] in p_to_copy and p_to_copy[j+1]['available'] and p_to_copy[j+1]['proc'] is None:
+                            p_to_copy[j+1]['start'] = p_to_copy[j]['start']
+                            p_to_copy[j+1]['size'] += p_to_copy[j]['size']
+                            new_part_to_copy = deepcopy(p_to_copy[:j] + p_to_copy[j+1:])
+                        # no tiene partes antes o despues
+                        else:
+                            p_to_copy[j]['available'] = True
+                            p_to_copy[j]['proc'] = None
+                            new_part_to_copy = deepcopy(p_to_copy)
+
+            sets['memory']['parts_var'][ to_rem['time'] ] = deepcopy(new_part_to_copy)
+        else:
+            new_to_rem.append(to_rem)
+    sets['memory']['parts_to_remove'] = deepcopy(new_to_rem)
+
 
 def __utils_order_memory(sets):
     ta_mem = sets['cpu']['time']
@@ -269,6 +297,12 @@ def __utils_calculate_percents(sets):
         sets['cpu']['queue'][j]['percent'] = format(sets['cpu']['queue'][j]['percent'] / sets['cpu']['time'] * 100, '.2f')
     for k in range(len(sets['es']['queue'])):
         sets['es']['queue'][k]['percent'] = format(sets['es']['queue'][k]['percent'] / sets['es']['time'] * 100, '.2f')
-    for x in range(len(sets['memory']['queue'])):
-        for p in range(len(sets['memory']['queue'][x]['elems'])):
-            sets['memory']['queue'][x]['elems'][p]['percent'] = format(sets['memory']['queue'][x]['elems'][p]['percent'] / sets['memory']['size'] * 100, '.2f')
+    if sets['memory']['schema'] == 'particion-fija':
+        for x in range(len(sets['memory']['queue'])):
+            for p in range(len(sets['memory']['queue'][x]['elems'])):
+                sets['memory']['queue'][x]['elems'][p]['percent'] = format(sets['memory']['queue'][x]['elems'][p]['percent'] / sets['memory']['size'] * 100, '.2f')
+    else:
+        for x in range(len(sets['memory']['parts_var'])):
+            if x in sets['memory']['parts_var']:
+                for p in range(len(sets['memory']['parts_var'][x])):
+                    sets['memory']['parts_var'][x][p]['percent'] = format(float(sets['memory']['parts_var'][x][p]['size']) / sets['memory']['size'] * 100, '.2f')

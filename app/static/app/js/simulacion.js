@@ -56,6 +56,7 @@ var initNuevoProcesoForm = function() {
         $('#div-fijas').show();
         $('input[name="partes_fijas"]').removeAttr('disabled');
         $('#memoria').attr('disabled', 'disabled');
+        $('#pf-first-fit').click();
         $('#div-variables').hide();
     });
 
@@ -63,6 +64,7 @@ var initNuevoProcesoForm = function() {
         $('#div-variables').show();
         $('#memoria').removeAttr('disabled');
         $('input[name="partes_fijas"]').attr('disabled', 'disabled');
+        $('#pv-first-fit').click();
         $('#div-fijas').hide();
     });
 };

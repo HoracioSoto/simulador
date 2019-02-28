@@ -81,7 +81,13 @@
                         {% for proc in data.cpu.queue  %}
                             <div class="progress-bar bg-white" role="progressbar" style="width:{{ proc.percent }}%;" aria-valuenow="15" aria-valuemin="0" aria-valuemax="100">
                                 <b class="text-dark">
-                                    <span class="float-left">{{ proc.start }}</span>
+                                    <span class="float-left">
+                                        {% if memoria.esquema == 'particion-fija' %}
+                                            {{ proc.start }}
+                                        {% else %}
+                                            <a href="#memory-time-{{ proc.start }}" style="color:#343a40 !important;">{{ proc.start }}</a>
+                                        {% endif %}
+                                    </span>
                                     {% if forloop.last %}
                                         <span class="float-right">{{ proc.end }}</span>
                                     {% endif %}
@@ -136,33 +142,67 @@
                         {% endif %}
                     </h5>
                     <hr/>
-                    {% for q in data.memory.queue  %}
-                        {% if q %}
-                            <h6 class="card-title">
-                                <b>Tiempo CPU:</b> {{ q.ta }}
-                            </h6>
-                            <div class="progress" id="progress-memory">
-                                {% for p in q.elems %}
-                                    <div class="progress-bar bg-{{ p.class }}" role="progressbar" style="width:{{ p.percent }}%;" aria-valuenow="15" aria-valuemin="0" aria-valuemax="100" {% if p.pid %}data-content="Tamaño: {{ p.size }} kb"{% else %}data-content="Espacio libre: {{ p.size }} kb"{% endif %} data-container="body" title="{{ p.label }}" data-placement="top" data-toggle="popover" data-trigger="hover">
-                                        {% if p.pid %}<b>PID {{ p.pid }}</b>{% endif %}
-                                    </div>
-                                {% endfor %}
-                            </div>
-                            <div class="progress" id="progress-memory-size">
-                                {% for part in particiones  %}
-                                    <div class="progress-bar bg-white" role="progressbar" style="width:{{ part.percent }}%;" aria-valuenow="15" aria-valuemin="0" aria-valuemax="100">
-                                        <b class="text-dark">
-                                            <span class="float-left">{{ part.start }} kb</span>
-                                            {% if forloop.last %}
-                                                <span class="float-right">{{ part.end }} kb</span>
-                                            {% endif %}
-                                        </b>
-                                    </div>
-                                {% endfor %}
-                            </div>
-                            <hr/>
-                        {% endif %}
-                    {% endfor %}
+                    {% if memoria.esquema == 'particion-fija' %}
+                        {% for q in data.memory.queue  %}
+                            {% if q %}
+                                <h6 class="card-title">
+                                    <b>Tiempo CPU:</b> {{ q.ta }}
+                                </h6>
+                                <div class="progress" id="progress-memory">
+                                    {% for p in q.elems %}
+                                        <div class="progress-bar bg-{{ p.class }}" role="progressbar" style="width:{{ p.percent }}%;" aria-valuenow="15" aria-valuemin="0" aria-valuemax="100" {% if p.pid %}data-content="Tamaño: {{ p.size }} kb"{% else %}data-content="Espacio libre: {{ p.size }} kb"{% endif %} data-container="body" title="{{ p.label }}" data-placement="top" data-toggle="popover" data-trigger="hover">
+                                            {% if p.pid %}<b>PID {{ p.pid }}</b>{% endif %}
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                                <div class="progress" id="progress-memory-size">
+                                    {% for part in particiones  %}
+                                        <div class="progress-bar bg-white" role="progressbar" style="width:{{ part.percent }}%;" aria-valuenow="15" aria-valuemin="0" aria-valuemax="100">
+                                            <b class="text-dark">
+                                                <span class="float-left">{{ part.start }} kb</span>
+                                                {% if forloop.last %}
+                                                    <span class="float-right">{{ part.end }} kb</span>
+                                                {% endif %}
+                                            </b>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                                <hr/>
+                            {% endif %}
+                        {% endfor %}
+                    {% else %}
+                        {% for key, value in data.memory.parts_var.items  %}
+                            {% if key < data.cpu.time %}
+                                <h6 class="card-title" id="memory-time-{{ key }}">
+                                    <b>Tiempo CPU:</b> {{ key }}
+                                </h6>
+                                <div class="progress" id="progress-memory">
+                                    {% for p in value %}
+                                        {% if p.proc %}
+                                            <div role="progressbar" style="width:{{ p.percent }}%;" aria-valuenow="15" aria-valuemin="0" aria-valuemax="100" class="progress-bar bg-{{ p.proc.class }}" data-content="Tamaño: {{ p.proc.size }} kb" data-container="body" title="{{ p.proc.label }}" data-placement="top" data-toggle="popover" data-trigger="hover">
+                                                <b>PID {{ p.proc.pid }}</b>
+                                            </div>
+                                        {% else %}
+                                            <div role="progressbar" style="width:{{ p.percent }}%;" aria-valuenow="15" aria-valuemin="0" aria-valuemax="100" class="progress-bar bg-none" data-content="Espacio libre: {{ p.size }} kb" data-container="body" title="" data-placement="top" data-toggle="popover" data-trigger="hover"></div>
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                                <div class="progress" id="progress-memory-size">
+                                    {% for part in particiones  %}
+                                        <div class="progress-bar bg-white" role="progressbar" style="width:{{ part.percent }}%;" aria-valuenow="15" aria-valuemin="0" aria-valuemax="100">
+                                            <b class="text-dark">
+                                                <span class="float-left">{{ part.start }} kb</span>
+                                                {% if forloop.last %}
+                                                    <span class="float-right">{{ part.end }} kb</span>
+                                                {% endif %}
+                                            </b>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                                <hr/>
+                            {% endif %}
+                        {% endfor %}
+                    {% endif %}
                 </div>
             </div>
         </div>
