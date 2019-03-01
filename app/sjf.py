@@ -150,7 +150,51 @@ def run_sjf(simulacion, procesos):
                             sets['memory']['parts_var'][ sets['time'] ] = deepcopy(part_var)
                         # worst-fit
                         else:
-                            pass
+                            part_var = deepcopy(sets['memory']['parts_var'][sets['time']])
+                            idx_part, idx_part_max, diff, diff_change = None, None, -1, False
+                            for jp in range(len(part_var)):
+                                p_select = deepcopy(part_var[jp])
+                                if (not p_ords[sld]['in_memory']) and p_select['available'] and (p_ords[sld]['size'] <= p_select['size']):
+                                    idx_part = deepcopy(jp)
+                                    if (p_select['size'] - p_ords[sld]['size']) > diff:
+                                        idx_part_max = deepcopy(idx_part)
+                                        diff = deepcopy(p_select['size'] - p_ords[sld]['size'])
+                                        diff_change = True
+                                else:
+                                    pass
+                            if diff_change:
+                                idx_part = deepcopy(idx_part_max)
+                            if idx_part is not None:
+                                part_var[idx_part]['proc'] = {
+                                    'pid': p_ords[sld]['pid'],
+                                    'label': p_ords[sld]['desc'],
+                                    'size': p_ords[sld]['size'],
+                                    'class': p_ords[sld]['class'],
+                                    'ta': sets['time'],
+                                    'tf': None
+                                }
+                                part_var[idx_part]['available'] = False
+                                p_ords[sld]['in_memory'] = True
+                                p_ords[sld]['part'] = {
+                                    'time': sets['time'],
+                                    'position': idx_part
+                                }
+
+                                if p_ords[sld]['size'] < part_var[idx_part]['size']:
+                                    new_part = {
+                                        'available': True,
+                                        'start': part_var[idx_part]['start'] + p_ords[sld]['size'],
+                                        'end': part_var[idx_part]['end'],
+                                        'size': part_var[idx_part]['size'] - p_ords[sld]['size'],
+                                        'percent': part_var[idx_part]['size'] - p_ords[sld]['size'],
+                                        'proc': None
+                                    }
+
+                                    part_var[idx_part]['size'] = p_ords[sld]['size']
+                                    part_var[idx_part]['percent'] = p_ords[sld]['size']
+                                    part_var[idx_part]['end'] = part_var[idx_part]['start'] + p_ords[sld]['size']
+                                    part_var = part_var[:idx_part+1] + [ new_part ] + part_var[idx_part+1:]
+                            sets['memory']['parts_var'][ sets['time'] ] = deepcopy(part_var)
             if p_ords[sld]['in_memory']:
                 if len(p_ords[sld]['cpu']):
                     # Chequear si no hay espacios entre el ultimo proceso y el que viene
